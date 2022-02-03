@@ -183,11 +183,13 @@ public class Lexer implements ILexer {
                     return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos+1),Integer.parseInt(code.substring(startPos,pos+1)));
                 }
                 else{
+                    column++;
+                    pos++;
                     while(Character.isDigit(code.charAt(pos+1))){
                         column++;
                         pos++;
                     }
-                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos+1),Float.parseFloat(code.substring(startPos,pos+1)));
+                    return new Token(new SourceLocation(line, startColumn), Kind.FLOAT_LIT, code.substring(startPos,pos+1),Float.parseFloat(code.substring(startPos,pos+1)));
                 }
             }
             case 0:
@@ -259,10 +261,12 @@ public class Lexer implements ILexer {
         int tempColumn=column;
         int tempPos=pos;
         int tempStartPos=startPos;
+        int tempLine=line;
         Token t=this.next();
         column=tempColumn;
         pos=tempPos;
         startPos=tempStartPos;
+        line=tempLine;
         if(t.getKind()==Kind.BOOLEAN_LIT)
             return new Token(t.getSourceLocation(), t.getKind(), t.getText(), t.getBooleanValue());
         else if(t.getKind()==Kind.STRING_LIT)

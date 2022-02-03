@@ -46,8 +46,8 @@ public class Lexer extends ILexer{
         //handle whitespace and comments first
         while(firstChar=='\n' | firstChar=='\t' | firstChar=='\r' | firstChar==' ' | firstChar=='#')
             if(firstChar=='\n' | firstChar=='\t' | firstChar=='\r' | firstChar==' ' ){
-                while(charAt(pos+1)=='\n' | charAt(pos+1)=='\t' | charAt(pos+1)=='\r' | charAt(pos+1)==' ' ){
-                    if(charAt(pos+1)=='\n'){
+                while(charAt(pos)=='\n' | charAt(pos)=='\t' | charAt(pos)=='\r' | charAt(pos)==' ' ){
+                    if(charAt(pos)=='\n'){
                         column=0;
                         line++;
                     }

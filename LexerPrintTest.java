@@ -5,7 +5,9 @@ public class LexerPrintTest {
         String test= """
                 keyword
                 123
-                "hi"
+                 "hi"
+                getRed
+                123.42
                 """;
         Lexer testLexer=new Lexer(test);
         while(testLexer.peek().getKind() != IToken.Kind.EOF){

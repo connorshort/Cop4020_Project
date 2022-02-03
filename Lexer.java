@@ -57,7 +57,7 @@ public class Lexer implements ILexer {
                 startColumn=column;
                 firstChar=code.charAt(startPos);
             }
-            if(firstChar=='#'){
+            else if(firstChar=='#'){
                 //POTENTIAL ERROR: SINCE \N ONLY APPEARS AT THE END OF A COMMENT, SHOULD THE WHILE CONDITION BE ALTERED SINCE \N WILL NOT IMMEDIATELY FOLLOW A #?
                 while(code.charAt(pos)!='\n'){
                     pos++;

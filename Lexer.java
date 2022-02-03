@@ -36,38 +36,53 @@ public class Lexer implements ILexer {
         this.code=input;
     }
 
-    public Token next(){
+    private char nextChar(int position){
+        position++;
+        if(position >= code.length()) return '\u001a';
+        return code.charAt(position);
+    }
+
+    public Token next() throws LexicalException {
         pos++;
         column++;
         startPos=pos;
         int startColumn=column;
+        if(startPos >= code.length()){
+            return new Token(new SourceLocation(line, startColumn), Kind.EOF, "");
+        }
         char firstChar=code.charAt(startPos);
         //handle whitespace and comments first
-        while(firstChar=='\n' | firstChar=='\t' | firstChar=='\r' | firstChar==' ' | firstChar=='#')
-            if(firstChar=='\n' | firstChar=='\t' | firstChar=='\r' | firstChar==' ' ){
-                while(code.charAt(pos)=='\n' | code.charAt(pos)=='\t' | code.charAt(pos)=='\r' | code.charAt(pos)==' ' ){
-                    if(code.charAt(pos)=='\n'){
-                        column=0;
+        while(firstChar=='\n' | firstChar=='\t' | firstChar=='\r' | firstChar==' ' | firstChar=='#') {
+            if (firstChar == '\n' | firstChar == '\t' | firstChar == '\r' | firstChar == ' ') {
+                while (code.charAt(pos) == '\n' | code.charAt(pos) == '\t' | code.charAt(pos) == '\r' | code.charAt(pos) == ' ') {
+                    if (code.charAt(pos) == '\n') {
+                        column = 0;
                         line++;
                     }
                     else column++;
                     pos++;
+                    if(pos >= code.length()){
+                        return new Token(new SourceLocation(line, startColumn), Kind.EOF, "");
+                    }
                 }
-                startPos=pos;
-                startColumn=column;
-                firstChar=code.charAt(startPos);
+                startPos = pos;
+                startColumn = column;
+                firstChar = code.charAt(startPos);
             }
-            else if(firstChar=='#'){
+            else if (firstChar == '#') {
                 //POTENTIAL ERROR: SINCE \N ONLY APPEARS AT THE END OF A COMMENT, SHOULD THE WHILE CONDITION BE ALTERED SINCE \N WILL NOT IMMEDIATELY FOLLOW A #?
-                while(code.charAt(pos)!='\n'){
+                while (code.charAt(pos) != '\n') {
                     pos++;
+                    if(pos >= code.length()){
+                        return new Token(new SourceLocation(line, startColumn), Kind.EOF, "");
+                    }
                 }
-                column=0;
-                line++;
-                startPos=pos;
-                startColumn=column;
-                firstChar=code.charAt(startPos);
+                column = 0;
             }
+            startPos = pos;
+            startColumn = column;
+            firstChar = code.charAt(startPos);
+        }
         //generate token now that whitespace and comments are ignored
         switch(firstChar){
             //handle single char tokens with no other possibilities
@@ -88,7 +103,7 @@ public class Lexer implements ILexer {
             }
             //handle all double char possibilities
             case '<':{
-                switch(code.charAt(startPos+1)){
+                switch(nextChar(startPos)){
                     case '<': {
                         pos++;
                         column++;
@@ -110,7 +125,7 @@ public class Lexer implements ILexer {
                 }
             }
             case '>':{
-                switch(code.charAt(startPos+1)){
+                switch(nextChar(startPos)){
                     case '>':{
                         pos++;
                         column++;
@@ -127,7 +142,7 @@ public class Lexer implements ILexer {
                 }
             }
             case '-':{
-                switch(code.charAt(startPos+1)){
+                switch(nextChar(startPos)){
                     case '>':{
                         pos++;
                         column++;
@@ -139,7 +154,7 @@ public class Lexer implements ILexer {
                 }
             }
             case '=':{
-                switch(code.charAt(startPos+1)){
+                switch(nextChar(startPos)){
                     case '=':{
                         pos++;
                         column++;
@@ -153,7 +168,7 @@ public class Lexer implements ILexer {
             //handle string literal
             case '"':{
                 String text="\"";
-                while(code.charAt(pos+1) != '"'){
+                while(nextChar(pos) != '"' && nextChar(pos) != '\u001a'){
                     text = text + code.charAt(pos+1);
                     column++;
                     pos++;
@@ -175,17 +190,22 @@ public class Lexer implements ILexer {
             case '7':
             case '8':
             case '9':{
-                while(Character.isDigit(code.charAt(pos+1))){
+                while(Character.isDigit(nextChar(pos))){
                     column++;
                     pos++;
                 }
-                if(code.charAt(pos+1) != '.'){
-                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos+1),Integer.parseInt(code.substring(startPos,pos+1)));
+                if(nextChar(pos) != '.'){
+                    try {
+                        return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos, pos + 1), Integer.parseInt(code.substring(startPos, pos + 1)));
+                    }
+                    catch(Exception E){
+                        throw new LexicalException("Improper integer value");
+                    }
                 }
                 else{
                     column++;
                     pos++;
-                    while(Character.isDigit(code.charAt(pos+1))){
+                    while(Character.isDigit(nextChar(pos))){
                         column++;
                         pos++;
                     }
@@ -202,53 +222,56 @@ public class Lexer implements ILexer {
                 String idenChars=idenStart+"1234567890";
                 //POTENTIAL ERROR: DID YOU MEAN TO PUT IDENSTART IN SINGLE QUOTES?
                 if(idenStart.contains(String.valueOf(firstChar))){
-                    while(idenChars.contains(String.valueOf(code.charAt(pos+1)))){
+                    while(idenChars.contains(String.valueOf(nextChar(pos)))){
                         column++;
                         pos++;
                     }
                 }
+                else{
+                    throw new LexicalException("Unexpected character");
+                }
 
                 //POTENTIAL ERROR: THIS IS WHAT VISHWA WROTE. MAKE SURE THERE'S NOTHING WRONG HERE.
                 String text=code.substring(startPos, pos+1);
-                if (text == "string" || text == "int" || text == "float" || text == "boolean" || text == "color" || text == "image" || text== "void") {
+                if (text.equals("string") || text.equals("int") || text.equals("float") || text.equals("boolean") || text.equals("color") || text.equals("image") || text.equals("void")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.TYPE, text);
                 }
 
-                else if (text == "getWidth" || text == "getHeight") {
+                else if (text.equals("getWidth") || text.equals("getHeight")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.IMAGE_OP, text);
                 }
 
-                else if (text == "getRed" || text == "getGreen" || text == "getBlue") {
+                else if (text.equals("getRed") || text.equals("getGreen") || text.equals("getBlue")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.COLOR_OP, text);
                 }
 
-                else if (text == "BLACK" || text == "BLUE" || text == "CYAN" || text == "DARK_GRAY" ||
-                        text == "GRAY" || text == "GREEN" || text == "LIGHT_GRAY" || text == "MAGENTA" ||
-                        text == "ORANGE" || text == "PINK" || text == "RED" || text == "WHITE" || text == "YELLOW") {
+                else if (text.equals("BLACK") || text.equals("BLUE") || text.equals("CYAN") || text.equals("DARK_GRAY") ||
+                        text.equals("GRAY") || text.equals("GREEN") || text.equals("LIGHT_GRAY") || text.equals("MAGENTA") ||
+                        text.equals("ORANGE") || text.equals("PINK") || text.equals("RED") || text.equals("WHITE") || text.equals("YELLOW")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.COLOR_CONST, text);
                 }
 
-                else if (text == "true" || text == "false") {
+                else if (text.equals("true") || text.equals("false")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, text);
                 }
 
-                else if (text == "if") {
+                else if (text.equals("if")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_IF, text);
                 }
 
-                else if (text == "else") {
+                else if (text.equals("else")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_ELSE, text);
                 }
 
-                else if (text == "fi") {
+                else if (text.equals("fi")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_FI, text);
                 }
 
-                else if (text == "write") {
+                else if (text.equals("write")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_WRITE, text);
                 }
 
-                else if (text == "console") {
+                else if (text.equals("console")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_CONSOLE, text);
                 }
                 return new Token(new SourceLocation(line, startColumn), Kind.IDENT, text);
@@ -257,7 +280,7 @@ public class Lexer implements ILexer {
 
         }
     }
-    public Token peek(){
+    public Token peek() throws LexicalException{
         int tempColumn=column;
         int tempPos=pos;
         int tempStartPos=startPos;

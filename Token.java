@@ -1,10 +1,9 @@
 package edu.ufl.cise.plc;
 
-import edu.ufl.cise.plc.Itoken;
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.IToken.SourceLocation;
 
-public class Token extends IToken{
+public class Token implements IToken {
     private SourceLocation location;
     private Kind kind;
     private String text;
@@ -13,23 +12,23 @@ public class Token extends IToken{
     private boolean booleanValue;
     private String stringValue;
 
-    public Token(Location loc, Kind kind, String text){
+    public Token(SourceLocation loc, Kind kind, String text){
         this.location=loc;
         this.kind=kind;
         this.text=text;
     }
 
     public Token(SourceLocation loc, Kind kind, String text, Object literal){
-        Token(loc, kind, text);
+        this(loc, kind, text);
         switch(kind){
-            case(kind==Kind.INT_LIT):
-                intValue=literal;
-            case(kind==Kind.FLOAT_LIT):
-                floatValue=literal;
-            case(kind==Kind.STRING_LIT):
-                stringValue=literal;
-            case(kind==Kind.BOOLEAN_LIT):
-                booleanValue=literal;
+            case INT_LIT:
+                intValue= (int) literal;
+            case FLOAT_LIT:
+                floatValue= (float) literal;
+            case STRING_LIT:
+                stringValue= (String) literal;
+            case BOOLEAN_LIT:
+                booleanValue= (boolean) literal;
         }
     }
     //returns the token kind
@@ -47,21 +46,26 @@ public class Token extends IToken{
 
 	public int getIntValue(){
         if(kind==Kind.INT_LIT) return intValue;
+        else return 0;
     }
 
 	//returns the float value represented by the characters of this token if kind is FLOAT_LIT
 	public float getFloatValue(){
-        if(kind==Kind.FLOAT_LIT) return booleanValue;
+        if(kind==Kind.FLOAT_LIT)
+            return floatValue;
+        else return 0;
     }
 
 	//returns the boolean value represented by the characters of this token if kind is BOOLEAN_LIT
 	public boolean getBooleanValue(){
-        if(kind==Kind.BOOLEAN_LIT) return intValue;
+        if(kind==Kind.BOOLEAN_LIT) return booleanValue;
+        else return false;
     }
 
 	//returns the String represented by the characters of this token if kind is STRING_LIT
 	//The delimiters should be removed and escape sequences replaced by the characters they represent.  
 	public String getStringValue(){
         if(kind==Kind.STRING_LIT) return stringValue;
+        else return "NON STRING LITERAL";
     }
 }

@@ -8,10 +8,10 @@ import java.util.HashMap;
 
 public class Lexer implements ILexer {
     private String code;
-    private int column=0;
+    private int column=-1;
     private int line=0;
-    private int startPos=0;
-    private int pos=0;
+    private int startPos=-1;
+    private int pos=-1;
 
     private static final Map<Character, Kind> singleChars;
 
@@ -161,7 +161,7 @@ public class Lexer implements ILexer {
                 pos++;
                 column++;
                 text=text + '"';
-                return new Token(new SourceLocation(line, startColumn), Kind.STRING_LIT, text, code.substring(startPos+1,pos-1));
+                return new Token(new SourceLocation(line, startColumn), Kind.STRING_LIT, text, code.substring(startPos+1,pos));
             }
 
             //handle numeric literals
@@ -180,16 +180,18 @@ public class Lexer implements ILexer {
                     pos++;
                 }
                 if(code.charAt(pos+1) != '.'){
-                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos),Integer.parseInt(code.substring(startPos,pos)));
+                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos+1),Integer.parseInt(code.substring(startPos,pos+1)));
                 }
                 else{
                     while(Character.isDigit(code.charAt(pos+1))){
                         column++;
                         pos++;
                     }
-                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos),Float.parseFloat(code.substring(startPos,pos)));
+                    return new Token(new SourceLocation(line, startColumn), Kind.INT_LIT, code.substring(startPos,pos+1),Float.parseFloat(code.substring(startPos,pos+1)));
                 }
             }
+            case 0:
+                return new Token(new SourceLocation(line, startColumn), Kind.EOF, "");
             //all other cases
             default:{
                 //handle identifiers and keywords
@@ -205,49 +207,49 @@ public class Lexer implements ILexer {
                 }
 
                 //POTENTIAL ERROR: THIS IS WHAT VISHWA WROTE. MAKE SURE THERE'S NOTHING WRONG HERE.
-
-                if (code.substring(startPos, pos) == "string" || code.substring(startPos, pos) == "int" || code.substring(startPos, pos) == "float" || code.substring(startPos, pos) == "boolean" || code.substring(startPos, pos) == "color" || code.substring(startPos, pos) == "image" || code.substring(startPos, pos) == "void") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.TYPE, code.substring(startPos, pos));
+                String text=code.substring(startPos, pos+1);
+                if (text == "string" || text == "int" || text == "float" || text == "boolean" || text == "color" || text == "image" || text== "void") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.TYPE, text);
                 }
 
-                else if (code.substring(startPos, pos) == "getWidth" || code.substring(startPos, pos) == "getHeight") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.IMAGE_OP, code.substring(startPos, pos));
+                else if (text == "getWidth" || text == "getHeight") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.IMAGE_OP, text);
                 }
 
-                else if (code.substring(startPos, pos) == "getRed" || code.substring(startPos, pos) == "getGreen" || code.substring(startPos, pos) == "getBlue") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.COLOR_OP, code.substring(startPos, pos));
+                else if (text == "getRed" || text == "getGreen" || text == "getBlue") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.COLOR_OP, text);
                 }
 
-                else if (code.substring(startPos, pos) == "BLACK" || code.substring(startPos, pos) == "BLUE" || code.substring(startPos, pos) == "CYAN" || code.substring(startPos, pos) == "DARK_GRAY" ||
-                        code.substring(startPos, pos) == "GRAY" || code.substring(startPos, pos) == "GREEN" || code.substring(startPos, pos) == "LIGHT_GRAY" || code.substring(startPos, pos) == "MAGENTA" ||
-                        code.substring(startPos, pos) == "ORANGE" || code.substring(startPos, pos) == "PINK" || code.substring(startPos, pos) == "RED" || code.substring(startPos, pos) == "WHITE" || code.substring(startPos, pos) == "YELLOW") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.COLOR_CONST, code.substring(startPos, pos));
+                else if (text == "BLACK" || text == "BLUE" || text == "CYAN" || text == "DARK_GRAY" ||
+                        text == "GRAY" || text == "GREEN" || text == "LIGHT_GRAY" || text == "MAGENTA" ||
+                        text == "ORANGE" || text == "PINK" || text == "RED" || text == "WHITE" || text == "YELLOW") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.COLOR_CONST, text);
                 }
 
-                else if (code.substring(startPos, pos) == "true" || code.substring(startPos, pos) == "false") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, code.substring(startPos, pos));
+                else if (text == "true" || text == "false") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, text);
                 }
 
-                else if (code.substring(startPos, pos) == "if") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.KW_IF, code.substring(startPos, pos));
+                else if (text == "if") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_IF, text);
                 }
 
-                else if (code.substring(startPos, pos) == "else") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.KW_ELSE, code.substring(startPos, pos));
+                else if (text == "else") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_ELSE, text);
                 }
 
-                else if (code.substring(startPos, pos) == "fi") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.KW_FI, code.substring(startPos, pos));
+                else if (text == "fi") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_FI, text);
                 }
 
-                else if (code.substring(startPos, pos) == "write") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.KW_WRITE, code.substring(startPos, pos));
+                else if (text == "write") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_WRITE, text);
                 }
 
-                else if (code.substring(startPos, pos) == "console") {
-                    return new Token(new SourceLocation(line, startColumn), Kind.KW_CONSOLE, code.substring(startPos, pos));
+                else if (text == "console") {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_CONSOLE, text);
                 }
-                return new Token(new SourceLocation(line, startColumn), Kind.IDENT, code.substring(startPos, pos));
+                return new Token(new SourceLocation(line, startColumn), Kind.IDENT, text);
 
             }
 

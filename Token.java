@@ -21,14 +21,18 @@ public class Token implements IToken {
     public Token(SourceLocation loc, Kind kind, String text, Object literal){
         this(loc, kind, text);
         switch(kind){
-            case INT_LIT:
-                intValue= (int) literal;
             case FLOAT_LIT:
                 floatValue= (float) literal;
+                break;
+            case INT_LIT:
+                intValue= (int) literal;
+                break;
             case STRING_LIT:
                 stringValue= (String) literal;
+                break;
             case BOOLEAN_LIT:
                 booleanValue= (boolean) literal;
+                break;
         }
     }
     //returns the token kind

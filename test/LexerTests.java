@@ -508,4 +508,54 @@ public class LexerTests {
 		checkToken(lexer.next(), Kind.RSQUARE, 4,0);
 		checkEOF(lexer.next());
 	}
+	@Test
+	void testKeywordWithinIdent() throws LexicalException {
+		String input = "stringVar\nifBlah\nREDfoo";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.IDENT, 0, 0);
+		checkToken(lexer.next(), Kind.IDENT, 1, 0);
+		checkToken(lexer.next(), Kind.IDENT, 2, 0);
+	}
+
+	@Test
+	public void testPeek() throws LexicalException {
+		String input = """
+			abc
+			  def
+			     ghi
+				""";
+		show(input);
+		ILexer lexer = getLexer(input);
+		checkIdent(lexer.peek(), "abc", 0,0);
+		checkIdent(lexer.next(), "abc", 0,0);
+
+		checkIdent(lexer.peek(), "def", 1,2);
+		checkIdent(lexer.peek(), "def", 1,2);
+		checkIdent(lexer.next(), "def", 1,2);
+
+		checkIdent(lexer.peek(), "ghi", 2,5);
+		checkIdent(lexer.peek(), "ghi", 2,5);
+		checkIdent(lexer.peek(), "ghi", 2,5);
+		checkIdent(lexer.next(), "ghi", 2,5);
+
+		checkEOF(lexer.peek());
+		checkEOF(lexer.next());
+	}
+
+	@Test
+	public void multiLineString() throws LexicalException{
+		String input = """
+				string a = "test
+				52";
+				a
+				""";
+		ILexer lexer = getLexer(input);
+		checkToken(lexer.next(), Kind.TYPE, 0, 0, "string");
+		checkIdent(lexer.next(), "a", 0, 7);
+		checkToken(lexer.next(), Kind.ASSIGN, 0, 9);
+		checkToken(lexer.next(), Kind.STRING_LIT, 0, 11, "\"test\n52\"");
+		checkToken(lexer.next(), Kind.SEMI, 1, 3);
+		checkIdent(lexer.next(), "a", 2, 0);
+	}
 }

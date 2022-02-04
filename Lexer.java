@@ -180,37 +180,43 @@ public class Lexer implements ILexer {
             //handle string literal
             case '"':{
                 String stringLit="";
+                int lineCount=0;
                 while(nextChar(pos) != '"'){
                     if(nextChar(pos)=='\\'){
                         if(nextChar(pos+1) =='b') stringLit += '\b';
                         else if(nextChar(pos+1) =='t') stringLit += '\t';
-                        else if(nextChar(pos+1) =='n') stringLit += '\n';
+                        else if(nextChar(pos+1) =='n')stringLit += '\n';
                         else if(nextChar(pos+1) =='f') stringLit += '\f';
                         else if(nextChar(pos+1) =='r') stringLit += '\r';
                         else if(nextChar(pos+1) =='\'') stringLit += '\'';
                         else if(nextChar(pos+1) =='\"') stringLit += '\"';
                         else if(nextChar(pos+1) =='|') stringLit += '|';
                         else if(nextChar(pos+1) =='\\') stringLit += '\\';
-                        else throw new LexicalException("Invalid escape sequence", line, column);
+                        else throw new LexicalException("Invalid escape sequence", line-lineCount, column);
                         pos+=2;
                         column+=2;
                     }
                     else {
+                        if(nextChar(pos)=='\n'){
+                            line++;
+                            lineCount++;
+                            column=-1;
+                        }
+                        else column++;
                         stringLit += code.charAt(pos + 1);
-                        column++;
                         pos++;
                     }
                     if(nextChar(pos) == '\u001a'){
-                        throw new LexicalException("String goes to end of file", line, column);
+                        throw new LexicalException("String goes to end of file", line-lineCount, column);
                     }
                 }
                 pos++;
                 column++;
                 try {
-                    return new Token(new SourceLocation(line, startColumn), Kind.STRING_LIT,code.substring(startPos, pos + 1),stringLit);
+                    return new Token(new SourceLocation(line-lineCount, startColumn), Kind.STRING_LIT,code.substring(startPos, pos + 1),stringLit);
                 }
                 catch(Exception E){
-                    throw new LexicalException("Invalid string value", line, column);
+                    throw new LexicalException("Invalid string value", line-lineCount, column);
                 }
             }
 

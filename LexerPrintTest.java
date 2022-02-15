@@ -2,14 +2,7 @@ package edu.ufl.cise.plc;
 
 public class LexerPrintTest {
     public static void main(String[] args) throws LexicalException {
-        String test = """
-				string a = "test
-				52";
-				a
-				string b == " new mu-
-				lti line string
-				that does weird " things;
-				""";
+        String test = "";
         Lexer testLexer=new Lexer(test);
         do{
             Token myToken=testLexer.next();

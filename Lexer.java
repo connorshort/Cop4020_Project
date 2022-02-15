@@ -43,6 +43,7 @@ public class Lexer implements ILexer {
     }
 
     public Token next() throws LexicalException {
+        if(code.equals("")) throw new LexicalException("No input given");
         pos++;
         column++;
         startPos=pos;

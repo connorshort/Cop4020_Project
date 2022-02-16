@@ -301,8 +301,12 @@ public class Lexer implements ILexer {
                     return new Token(new SourceLocation(line, startColumn), Kind.COLOR_CONST, text);
                 }
 
-                else if (text.equals("true") || text.equals("false")) {
-                    return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, text);
+                else if (text.equals("true")) {
+                    return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, text, true);
+                }
+
+                else if (text.equals("false")) {
+                    return new Token(new SourceLocation(line, startColumn), Kind.BOOLEAN_LIT, text, false);
                 }
 
                 else if (text.equals("if")) {

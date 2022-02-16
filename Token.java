@@ -35,6 +35,12 @@ public class Token implements IToken {
                 break;
         }
     }
+    public Token(SourceLocation loc, Kind kind, String text, Boolean booleanLit){
+        this(loc, kind, text);
+        booleanValue= (boolean) booleanLit;
+
+    }
+
     //returns the token kind
 	public Kind getKind(){
         return kind;

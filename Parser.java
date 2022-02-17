@@ -62,8 +62,13 @@ public class Parser implements IParser{
             return left;
         }
         else{
-            position++;
-            return new BinaryExpr(head, left, tokens.get(position-1), logicalOrExpression());
+            Expr result=left;
+            while(check(Kind.OR)){
+                position++;
+                Expr right=logicalAndExpression();
+                result= new BinaryExpr(head, result, tokens.get(position-1), right);
+            }
+            return result;
         }
     }
 
@@ -74,8 +79,14 @@ public class Parser implements IParser{
             return left;
         }
         else{
-            position++;
-            return new BinaryExpr(head, left, tokens.get(position-1), logicalAndExpression());
+            Expr result=left;
+            while(check(Kind.AND)){
+                IToken op=tokens.get(position);
+                position++;
+                Expr right=comparisonExpression();
+                result= new BinaryExpr(head, result, op, right);
+            }
+            return result;
         }
     }
 
@@ -86,8 +97,14 @@ public class Parser implements IParser{
             return left;
         }
         else{
-            position++;
-            return new BinaryExpr(head, left, tokens.get(position-1), comparisonExpression());
+            Expr result=left;
+            while(check(Kind.LT, Kind.GT, Kind.EQUALS, Kind.NOT_EQUALS, Kind.LE, Kind.GE)){
+                IToken op=tokens.get(position);
+                position++;
+                Expr right=additiveExpression();
+                result= new BinaryExpr(head, result, op, right);
+            }
+            return result;
         }
     }
 
@@ -98,8 +115,14 @@ public class Parser implements IParser{
             return left;
         }
         else{
-            position++;
-            return new BinaryExpr(head, left, tokens.get(position-1), additiveExpression());
+            Expr result=left;
+            while(check(Kind.PLUS,Kind.MINUS)){
+                IToken op=tokens.get(position);
+                position++;
+                Expr right=multiplicativeExpression();
+                result= new BinaryExpr(head, result, op, right);
+            }
+            return result;
         }
     }
 
@@ -110,8 +133,14 @@ public class Parser implements IParser{
             return left;
         }
         else{
-            position++;
-            return new BinaryExpr(head, left, tokens.get(position-1), multiplicativeExpression());
+            Expr result=left;
+            while(check(Kind.TIMES,Kind.DIV,Kind.MOD)){
+                IToken op=tokens.get(position);
+                position++;
+                Expr right=unaryExpression();
+                result= new BinaryExpr(head, result, op, right);
+            }
+            return result;
         }
     }
 

@@ -1,11 +1,6 @@
 package edu.ufl.cise.plc.test;
 
-import static edu.ufl.cise.plc.IToken.Kind.AND;
-import static edu.ufl.cise.plc.IToken.Kind.BANG;
-import static edu.ufl.cise.plc.IToken.Kind.COLOR_OP;
-import static edu.ufl.cise.plc.IToken.Kind.MINUS;
-import static edu.ufl.cise.plc.IToken.Kind.PLUS;
-import static edu.ufl.cise.plc.IToken.Kind.TIMES;
+import static edu.ufl.cise.plc.IToken.Kind.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -458,6 +453,360 @@ class Assignment2StarterTests {
 		Expr three = ((BinaryExpr) multiplication).getRight();
 		assertThat("", three, instanceOf(IntLitExpr.class));
 		assertEquals(3, ((IntLitExpr) three).getValue());
+	}
+	@DisplayName("nested_if")
+	@Test
+	public void nested_if(TestInfo testInfo) throws Exception{
+		String input = """
+                if(if(z) a else b fi)
+                    x
+                else
+                    y fi
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(ConditionalExpr.class));
+
+		Expr var = ((ConditionalExpr) ast).getCondition();
+		assertThat("", var, instanceOf(ConditionalExpr.class));
+
+		Expr var2 = ((ConditionalExpr) var).getCondition();
+		assertThat("", var2, instanceOf(IdentExpr.class));
+		assertEquals("z", var2.getText());
+
+		Expr var3 = ((ConditionalExpr) var).getTrueCase();
+		assertThat("", var3, instanceOf(IdentExpr.class));
+		assertEquals("a", var3.getText());
+
+		Expr var4 = ((ConditionalExpr) var).getFalseCase();
+		assertThat("", var4, instanceOf(IdentExpr.class));
+		assertEquals("b", var4.getText());
+
+		Expr var5 = ((ConditionalExpr) ast).getTrueCase();
+		assertThat("", var5, instanceOf(IdentExpr.class));
+		assertEquals("x", var5.getText());
+
+		Expr var6 = ((ConditionalExpr) ast).getFalseCase();
+		assertThat("", var6, instanceOf(IdentExpr.class));
+		assertEquals("y", var6.getText());
+	}
+
+	@DisplayName("empty_paren")
+	@Test
+	public void empty_paren(TestInfo testInfo) throws Exception{
+		String input = """
+                ()
+                """;
+		show("-------------");
+		show(input);
+		Exception e = assertThrows(SyntaxException.class, () -> {
+			getAST(input);
+		});
+		show(e);
+	}
+
+	@DisplayName("simple_paren")
+	@Test
+	public void simple_paren(TestInfo testInfo) throws Exception{
+		String input = """
+                ("hello")
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(StringLitExpr.class));
+		assertEquals("hello", ((StringLitExpr) ast).getValue());
+	}
+
+	@DisplayName("extra_paren")
+	@Test
+	public void extra_paren(TestInfo testInfo) throws Exception {
+		String input = """
+				(("world"))
+				""";
+		show("-------------");
+		show(input);
+	}
+	@DisplayName("test_eof")
+	@Test
+	public void test_eof(TestInfo testInfo) throws Exception{
+		String input = """
+              1 1
+              """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		assertThat("", ast, instanceOf(IntLitExpr.class));
+	}
+
+
+	@DisplayName("leftAssociativity")
+	@Test
+	public void leftAssociative(TestInfo testInfo) throws Exception {
+		String input = """
+			3 + 4 + 5
+			""";
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(IToken.Kind.PLUS, ((BinaryExpr) ast).getOp().getKind());
+
+		Expr leftPair = ((BinaryExpr) ast).getLeft();
+		assertThat("", leftPair , instanceOf(BinaryExpr.class));
+
+		Expr right = ((BinaryExpr) ast).getRight();
+		assertThat("", right, instanceOf(IntLitExpr.class));
+	}
+
+
+	@DisplayName("bangBool")
+	@Test
+	public void bangBool(TestInfo testInfo) throws Exception {
+		String input = """
+                !true
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(UnaryExpr.class));
+		assertEquals(BANG, ((UnaryExpr) ast).getOp().getKind());
+		Expr var1 = ((UnaryExpr) ast).getExpr();
+		assertThat("", var1, instanceOf(BooleanLitExpr.class));
+		assertEquals(true, ((BooleanLitExpr) var1).getValue());
+	}
+
+	@DisplayName("Test parentheses")
+	@Test
+	public void testParentheses(TestInfo testInfo) throws Exception {
+		String input = """
+        a + ((b + c) * 4) + e
+        """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) ast).getOp().getKind());
+
+		Expr addition = ((BinaryExpr) ast).getLeft();
+		assertThat("", addition, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) addition).getOp().getKind());
+
+		Expr identE = ((BinaryExpr) ast).getRight();
+		assertThat("", identE, instanceOf(IdentExpr.class));
+		assertEquals("e", identE.getText());
+
+		Expr identA = ((BinaryExpr) addition).getLeft();
+		assertThat("", identA, instanceOf(IdentExpr.class));
+		assertEquals("a", identA.getText());
+
+		Expr multExpr = ((BinaryExpr) addition).getRight();
+		assertThat("", multExpr, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) multExpr).getOp().getKind());
+
+		Expr bPlusC = ((BinaryExpr) multExpr).getLeft();
+		assertThat("", bPlusC, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) bPlusC).getOp().getKind());
+
+		Expr identB = ((BinaryExpr) bPlusC).getLeft();
+		assertThat("", identB, instanceOf(IdentExpr.class));
+		assertEquals("b", identB.getText());
+
+		Expr identC = ((BinaryExpr) bPlusC).getRight();
+		assertThat("", identC, instanceOf(IdentExpr.class));
+		assertEquals("c", identC.getText());
+
+		Expr int_lit4 = ((BinaryExpr) multExpr).getRight();
+		assertThat("", int_lit4, instanceOf(IntLitExpr.class));
+		assertEquals(4,  ((IntLitExpr) int_lit4).getValue());
+	}
+
+	@DisplayName("triple_if")
+	@Test
+	public void triple_if(TestInfo testInfo) throws Exception {
+		String input = """
+        if (a < b)
+           if (l > s)
+              if (le == us)
+                 v
+              else
+                 o
+              fi
+           else
+              z
+           fi
+        else
+           c
+        fi
+        """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(ConditionalExpr.class));
+
+		Expr var17 = ((ConditionalExpr) ast).getCondition();
+		assertThat("", var17, instanceOf(BinaryExpr.class));
+		assertEquals(LT, ((BinaryExpr) var17).getOp().getKind());
+
+		Expr var18 = ((BinaryExpr) var17).getLeft();
+		assertThat("", var18, instanceOf(IdentExpr.class));
+		assertEquals("a", var18.getText());
+
+		Expr var19 = ((BinaryExpr) var17).getRight();
+		assertThat("", var19, instanceOf(IdentExpr.class));
+		assertEquals("b", var19.getText());
+
+
+
+		Expr var20 = ((ConditionalExpr) ast).getTrueCase();
+		assertThat("", var20, instanceOf(ConditionalExpr.class));
+
+		Expr var25 = ((ConditionalExpr) var20).getCondition();
+		assertThat("", var25, instanceOf(BinaryExpr.class));
+		assertEquals(GT, ((BinaryExpr) var25).getOp().getKind());
+
+		Expr var26 = ((BinaryExpr) var25).getLeft();
+		assertThat("", var26, instanceOf(IdentExpr.class));
+		assertEquals("l", var26.getText());
+
+		Expr var27 = ((BinaryExpr) var25).getRight();
+		assertThat("", var27, instanceOf(IdentExpr.class));
+		assertEquals("s", var27.getText());
+
+		Expr var28 = ((ConditionalExpr) var20).getTrueCase();
+		assertThat("", var28, instanceOf(ConditionalExpr.class));
+
+		Expr var29 = ((ConditionalExpr) var28).getCondition();
+		assertThat("", var29, instanceOf(BinaryExpr.class));
+
+		assertEquals(EQUALS, ((BinaryExpr) var29).getOp().getKind());
+
+		Expr var30 = ((BinaryExpr) var29).getLeft();
+		assertThat("", var30, instanceOf(IdentExpr.class));
+		assertEquals("le", var30.getText());
+
+		Expr var31 = ((BinaryExpr) var29).getRight();
+		assertThat("", var31, instanceOf(IdentExpr.class));
+		assertEquals("us", var31.getText());
+
+		Expr var22 = ((ConditionalExpr) var20).getTrueCase();
+		assertThat("", var22, instanceOf(ConditionalExpr.class));
+
+		Expr var23 = ((ConditionalExpr) var20).getFalseCase();
+		assertThat("", var23, instanceOf(IdentExpr.class));
+		assertEquals("z", var23.getText());
+
+		Expr var24 = ((ConditionalExpr) ast).getFalseCase();
+		assertThat("", var24, instanceOf(IdentExpr.class));
+		assertEquals("c", var24.getText());
+	}
+
+	@DisplayName("testAllOperators")
+	@Test
+	public void testAllOperators(TestInfo testInfo) throws Exception {
+		String input = """
+				(false | 2 + 25 * 4/3 - 8 % a[(36+b),1] >= 0) == true
+				""";
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(EQUALS, ((BinaryExpr) ast).getOp().getKind());
+
+		Expr paren = ((BinaryExpr) ast).getLeft();
+		assertThat("", paren, instanceOf(BinaryExpr.class));
+		assertEquals(OR, ((BinaryExpr) paren).getOp().getKind());
+
+		Expr _false = ((BinaryExpr) paren).getLeft();
+		assertThat("", _false, instanceOf(BooleanLitExpr.class));
+		assertEquals(false, ((BooleanLitExpr) _false).getValue());
+
+		Expr ge = ((BinaryExpr) paren).getRight();
+		assertThat("", ge, instanceOf(BinaryExpr.class));
+		assertEquals(GE, ((BinaryExpr) ge).getOp().getKind());
+
+		Expr minus = ((BinaryExpr) ge).getLeft();
+		assertThat("", minus, instanceOf(BinaryExpr.class));
+		assertEquals(MINUS, ((BinaryExpr) minus).getOp().getKind());
+
+		Expr add = ((BinaryExpr) minus).getLeft();
+		assertThat("", add, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) add).getOp().getKind());
+
+		Expr two = ((BinaryExpr) add).getLeft();
+		assertThat("", two, instanceOf(IntLitExpr.class));
+		assertEquals(2, ((IntLitExpr) two).getValue());
+
+		Expr div = ((BinaryExpr) add).getRight();
+		assertThat("", div, instanceOf(BinaryExpr.class));
+		assertEquals(DIV, ((BinaryExpr) div).getOp().getKind());
+
+		Expr times = ((BinaryExpr) div).getLeft();
+		assertThat("", times, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) times).getOp().getKind());
+
+		Expr twentyFive = ((BinaryExpr) times).getLeft();
+		assertThat("", twentyFive, instanceOf(IntLitExpr.class));
+		assertEquals(25, ((IntLitExpr) twentyFive).getValue());
+
+		Expr four = ((BinaryExpr) times).getRight();
+		assertThat("", four, instanceOf(IntLitExpr.class));
+		assertEquals(4, ((IntLitExpr) four).getValue());
+
+		Expr three = ((BinaryExpr) div).getRight();
+		assertThat("", three, instanceOf(IntLitExpr.class));
+		assertEquals(3, ((IntLitExpr) three).getValue());
+
+		Expr mod = ((BinaryExpr) minus).getRight();
+		assertThat("", mod, instanceOf(BinaryExpr.class));
+		assertEquals(MOD, ((BinaryExpr) mod).getOp().getKind());
+
+		Expr eight = ((BinaryExpr) mod).getLeft();
+		assertThat("", eight, instanceOf(IntLitExpr.class));
+		assertEquals(8, ((IntLitExpr) eight).getValue());
+
+		Expr un = ((BinaryExpr) mod).getRight();
+		assertThat("", un, instanceOf(UnaryExprPostfix.class));
+
+		Expr a = ((UnaryExprPostfix) un).getExpr();
+		assertThat("", a, instanceOf(IdentExpr.class));
+		assertEquals("a", a.getText());
+
+		PixelSelector sel = ((UnaryExprPostfix) un).getSelector();
+		assertThat("", sel, instanceOf(PixelSelector.class));
+
+		Expr expr = ((PixelSelector) sel).getX();
+		assertThat("", expr, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) expr).getOp().getKind());
+
+		Expr thirtySix = ((BinaryExpr) expr).getLeft();
+		assertThat("", thirtySix, instanceOf(IntLitExpr.class));
+		assertEquals(36, ((IntLitExpr) thirtySix).getValue());
+
+		Expr b = ((BinaryExpr) expr).getRight();
+		assertThat("", b, instanceOf(IdentExpr.class));
+		assertEquals("b", b.getText());
+
+		Expr one = ((PixelSelector) sel).getY();
+		assertThat("", one, instanceOf(IntLitExpr.class));
+		assertEquals(1, ((IntLitExpr) one).getValue());
+
+		Expr zero = ((BinaryExpr) ge).getRight();
+		assertThat("", zero, instanceOf(IntLitExpr.class));
+		assertEquals(0, ((IntLitExpr) zero).getValue());
+
+		Expr _true = ((BinaryExpr) ast).getRight();
+		assertThat("", _true, instanceOf(BooleanLitExpr.class));
+		assertEquals(true, ((BooleanLitExpr) _true).getValue());
 	}
 
 }

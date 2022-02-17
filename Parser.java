@@ -64,9 +64,10 @@ public class Parser implements IParser{
         else{
             Expr result=left;
             while(check(Kind.OR)){
+                IToken op=tokens.get(position);
                 position++;
                 Expr right=logicalAndExpression();
-                result= new BinaryExpr(head, result, tokens.get(position-1), right);
+                result= new BinaryExpr(head, result, op, right);
             }
             return result;
         }

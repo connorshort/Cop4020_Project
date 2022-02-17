@@ -30,6 +30,10 @@ public class Parser implements IParser{
             return logicalOrExpression();
     }
 
+    void checkIncomplete(String message) throws SyntaxException{
+        if(check(Kind.EOF))
+            throw new SyntaxException(message);
+    }
     ConditionalExpr conditionalExpression() throws SyntaxException {
         IToken head=tokens.get(position);
         position++;
@@ -37,10 +41,16 @@ public class Parser implements IParser{
             throw new SyntaxException("Expected '(' after if statement");
         position++;
         Expr condition=expression();
+        if(!check(Kind.RPAREN))
+            throw new SyntaxException("Expected ')' after conditional expression");
         position++;
         Expr positive=expression();
+        if(!check(Kind.KW_ELSE))
+            throw new SyntaxException("Expected 'else'");
         position++;
         Expr negative=expression();
+        if(!check(Kind.KW_FI))
+        throw new SyntaxException("Expected 'fi'");
         position++;
         return new ConditionalExpr(head, condition, positive, negative);
     }
@@ -172,7 +182,7 @@ public class Parser implements IParser{
 
     private boolean check(Kind... kinds){
         for(Kind k : kinds){
-            if(tokens.get(position).getKind()==k)
+            if(position<tokens.size() &&tokens.get(position).getKind()==k)
                 return true;
         }
         return false;

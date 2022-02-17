@@ -12,14 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import edu.ufl.cise.plc.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
-import edu.ufl.cise.plc.CompilerComponentFactory;
-import edu.ufl.cise.plc.IParser;
-import edu.ufl.cise.plc.LexicalException;
-import edu.ufl.cise.plc.SyntaxException;
 import edu.ufl.cise.plc.ast.ASTNode;
 import edu.ufl.cise.plc.ast.BinaryExpr;
 import edu.ufl.cise.plc.ast.BooleanLitExpr;
@@ -336,4 +333,131 @@ class Assignment2StarterTests {
 		});
 		show(e);
 	}
+
+	@DisplayName("testEOF")
+	@Test
+	public void testEOF(TestInfo testinfo) throws Exception{
+		String input = """
+        x +
+        """;
+		show("-------------");
+		show(input);
+		Exception e =assertThrows(SyntaxException.class,() ->{
+			getAST(input);
+		});
+		show(e);
+	}
+
+	public void invalidConditionalChecker(String input) throws Exception{
+		show("-------------");
+		show(input);
+		Exception e =assertThrows(SyntaxException.class,() ->{
+			getAST(input);
+		});
+		show(e);
+	}
+
+
+	@DisplayName("testInvalidConditional1")
+	@Test
+	public void testInvalidConditional1(TestInfo testInfo)throws Exception{
+
+		String input = """
+        if (
+        """;
+		invalidConditionalChecker(input);
+
+		String input2 = """
+        if (b
+        """;
+		invalidConditionalChecker(input2);
+
+		String input3 = """
+        if (b)
+        """;
+		invalidConditionalChecker(input3);
+
+		String input4 = """
+        if (b) x
+        """;
+		invalidConditionalChecker(input4);
+
+		String input5 = """
+        if (b) x else
+        """;
+		invalidConditionalChecker(input5);
+
+		String input6 = """
+        if (b) x else
+        """;
+		invalidConditionalChecker(input6);
+
+		String input7 = """
+        if (b) x else y
+        """;
+		invalidConditionalChecker(input7);
+
+		String input8 = """
+        if (b) x else y test
+        """;
+		invalidConditionalChecker(input8);
+
+	}
+
+	@DisplayName("testPixelError")
+	@Test
+	public void testPixelError(TestInfo testinfo) throws Exception{
+		String input = """
+      a[,
+      """;
+		show("-------------");
+		show(input);
+		Exception e = assertThrows(SyntaxException.class,() ->{
+			getAST(input);
+		});
+		show(e);
+	}
+
+	@DisplayName("testPEMDAS0")
+	@Test
+	public void testPEMDAS0(TestInfo testInfo) throws Exception {
+		String input = """
+				1 + 2 * 3 / 4 - 5
+				""";
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(MINUS, ((BinaryExpr) ast).getOp().getKind());
+
+		Expr addition = ((BinaryExpr) ast).getLeft();
+		assertThat("", addition, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) addition).getOp().getKind());
+		Expr five = ((BinaryExpr) ast).getRight();
+		assertThat("", five, instanceOf(IntLitExpr.class));
+		assertEquals(5, ((IntLitExpr) five).getValue());
+
+		Expr one = ((BinaryExpr) addition).getLeft();
+		assertThat("", one, instanceOf(IntLitExpr.class));
+		assertEquals(1, ((IntLitExpr) one).getValue());
+		Expr division = ((BinaryExpr) addition).getRight();
+		assertThat("", division, instanceOf(BinaryExpr.class));
+		assertEquals(IToken.Kind.DIV, ((BinaryExpr) division).getOp().getKind());
+
+		Expr multiplication = ((BinaryExpr) division).getLeft();
+		assertThat("", multiplication, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) multiplication).getOp().getKind());
+		Expr four = ((BinaryExpr) division).getRight();
+		assertThat("", four, instanceOf(IntLitExpr.class));
+		assertEquals(4, ((IntLitExpr) four).getValue());
+
+		Expr two = ((BinaryExpr) multiplication).getLeft();
+		assertThat("", two, instanceOf(IntLitExpr.class));
+		assertEquals(2, ((IntLitExpr) two).getValue());
+		Expr three = ((BinaryExpr) multiplication).getRight();
+		assertThat("", three, instanceOf(IntLitExpr.class));
+		assertEquals(3, ((IntLitExpr) three).getValue());
+	}
+
 }

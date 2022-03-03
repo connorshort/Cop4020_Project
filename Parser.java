@@ -86,6 +86,7 @@ public class Parser implements IParser{
             if(check(Kind.TYPE, Kind.KW_WRITE, Kind.RETURN, Kind.IDENT)){
                 if(check(Kind.TYPE)) decsAndStatements.add(declaration());
                 else decsAndStatements.add(statement());
+                //running into problems here
                 if(!check(Kind.SEMI)){
                     throw new SyntaxException("Expected ;");
                 }
@@ -108,7 +109,6 @@ public class Parser implements IParser{
         else if(check(Kind.LSQUARE)){
             Dimension d=dimension();
             if(!check(Kind.IDENT)) throw new SyntaxException("Syntax error: expected identifier after dimension");
-            position++;
             return new NameDefWithDim(head, head.getText(), tokens.get(position-1).getText(), d);
         }
         else throw new SyntaxException("Invalid name definition");

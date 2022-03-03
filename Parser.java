@@ -3,7 +3,9 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.ASTNode;
 import edu.ufl.cise.plc.ast.*;
+import edu.ufl.cise.plc.ast.Types.Type;
 
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class Parser implements IParser{
         do{
             tokens.add(lex.next());
         }while(tokens.get(tokens.size() - 1).getKind() != Kind.EOF);
-        return expression();
+        return program();
     }
     Expr expression() throws SyntaxException {
         if(check(Kind.KW_IF))
@@ -34,6 +36,97 @@ public class Parser implements IParser{
         if(check(Kind.EOF))
             throw new SyntaxException(message);
     }
+
+    //start of assignment 3 changes
+    Program program() throws SyntaxException{
+        IToken head=tokens.get(position);
+        Type type;
+        String name;
+        List<NameDef> params = new ArrayList<NameDef>();
+        List<ASTNode> decsAndStatements = new ArrayList<ASTNode>();
+
+        if(check(Kind.KW_VOID)) {
+            type = Type.toType("void");
+        }
+        else if(!check(Kind.TYPE)){
+            throw new SyntaxException("Program must have a return type");
+        }
+        else{
+            type=Type.toType(head.getText());
+        }
+        position++;
+
+        if(check(Kind.IDENT)) {
+            name=tokens.get(position).getText();
+        }
+        else{
+            throw new SyntaxException("Program must have a name");
+        }
+        position++;
+
+        if(!check(Kind.LPAREN)){
+            throw new SyntaxException("Expected '(' after program name");
+        }
+        position++;
+
+        if(check(Kind.TYPE)){
+            params.add(nameDef());
+            while(check(Kind.COMMA)) {
+                position++;
+                params.add(nameDef());
+            }
+        }
+
+        if(!check(Kind.RPAREN)){
+            throw new SyntaxException("Expected ')' after parameters");
+        }
+        position++;
+
+        while(!check(Kind.EOF)){
+            if(check(Kind.TYPE, Kind.KW_WRITE, Kind.RETURN, Kind.IDENT)){
+                if(check(Kind.TYPE)) decsAndStatements.add(declaration());
+                else decsAndStatements.add(statement());
+                if(!check(Kind.SEMI)){
+                    throw new SyntaxException("Expected ;");
+                }
+                position++;
+            }
+            else throw new SyntaxException("Syntax error: Unexpected token");
+        }
+        return new Program(head, type, name, params, decsAndStatements);
+    }
+
+    NameDef nameDef() throws SyntaxException{
+        if(!check(Kind.TYPE)) throw new SyntaxException("Syntax error: Expected a type");
+        IToken head=tokens.get(position);
+        Type type=Type.toType(tokens.get(position).getText());
+        position++;
+        if(check(Kind.IDENT)){
+            position++;
+            return new NameDef(head, head.getText(), tokens.get(position-1).getText());
+        }
+        else if(check(Kind.LSQUARE)){
+            Dimension d=dimension();
+            if(!check(Kind.IDENT)) throw new SyntaxException("Syntax error: expected identifier after dimension");
+            position++;
+            return new NameDefWithDim(head, head.getText(), tokens.get(position-1).getText(), d);
+        }
+        else throw new SyntaxException("Invalid name definition");
+    }
+
+    Declaration declaration() throws SyntaxException{
+        IToken head=tokens.get(position);
+        NameDef n=nameDef();
+        position++;
+        if(!check(Kind.EQUALS, Kind.LARROW))
+            return n;
+        else{
+            IToken op=tokens.get(position);
+            position++;
+            return new VarDeclaration(head, n, op, expression());
+        }
+    }
+
     ConditionalExpr conditionalExpression() throws SyntaxException {
         IToken head=tokens.get(position);
         position++;
@@ -193,6 +286,24 @@ public class Parser implements IParser{
                 position++;
                 return inner;
             }
+            case COLOR_CONST -> {
+                return new ColorConstExpr(t);
+            }
+            case LANGLE -> {
+                position++;
+                Expr left = expression();
+                if(!check(Kind.COMMA)) throw new SyntaxException("Expected ',' in color expression");
+                position++;
+                Expr middle=expression();
+                if(!check(Kind.COMMA)) throw new SyntaxException("Expected ',' in color expression");
+                position++;
+                Expr right=expression();
+                if(!check(Kind.RANGLE)) throw new SyntaxException("Expected '>>' at end of color expression");
+                return new ColorExpr(t, left, middle, right);
+            }
+            case KW_CONSOLE -> {
+                return new ConsoleExpr(t);
+            }
             default -> {
                 throw new SyntaxException("Unexpected token");
             }
@@ -210,6 +321,48 @@ public class Parser implements IParser{
         return new PixelSelector(t, x, y);
     }
 
+    Dimension dimension() throws SyntaxException {
+        IToken t=tokens.get(position);
+        position++;
+        Expr x=expression();
+        position++;
+        Expr y=expression();
+        position++;
+        return new Dimension(t, x, y);
+    }
+
+    Statement statement() throws SyntaxException{
+        IToken head = tokens.get(position);
+        if(check(Kind.KW_WRITE)){
+            position++;
+            Expr source=expression();
+            if(!check(Kind.RARROW)) throw new SyntaxException("Expected '->' in write statement");
+            position++;
+            Expr dest=expression();
+            return new WriteStatement(head, source, dest);
+        }
+        else if(check(Kind.RETURN)){
+            position++;
+            Expr expr=expression();
+            return new ReturnStatement(head, expr);
+        }
+        else if(check(Kind.IDENT)){
+            position++;
+            PixelSelector selector=null;
+            if(check(Kind.LSQUARE)){
+                selector=pixelSelector();
+            }
+            if(check(Kind.EQUALS)){
+                return new AssignmentStatement(head, head.getText(), selector, expression());
+            }
+            else if(check(Kind.LARROW)){
+                return new ReadStatement(head, head.getText(), selector, expression());
+            }
+            else throw new SyntaxException("Unexpected character in statement");
+
+        }
+        else throw new SyntaxException("Invalid statement");
+    }
     private boolean check(Kind... kinds){
         for(Kind k : kinds){
             if(position<tokens.size() &&tokens.get(position).getKind()==k)

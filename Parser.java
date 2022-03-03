@@ -109,6 +109,7 @@ public class Parser implements IParser{
         else if(check(Kind.LSQUARE)){
             Dimension d=dimension();
             if(!check(Kind.IDENT)) throw new SyntaxException("Syntax error: expected identifier after dimension");
+            position++;
             return new NameDefWithDim(head, head.getText(), tokens.get(position-1).getText(), d);
         }
         else throw new SyntaxException("Invalid name definition");
@@ -117,9 +118,8 @@ public class Parser implements IParser{
     Declaration declaration() throws SyntaxException{
         IToken head=tokens.get(position);
         NameDef n=nameDef();
-        position++;
-        if(!check(Kind.EQUALS, Kind.LARROW))
-            return n;
+        if(!check(Kind.ASSIGN, Kind.LARROW))
+            return new VarDeclaration(head, n, null, null);
         else{
             IToken op=tokens.get(position);
             position++;
@@ -287,6 +287,7 @@ public class Parser implements IParser{
                 return inner;
             }
             case COLOR_CONST -> {
+                position++;
                 return new ColorConstExpr(t);
             }
             case LANGLE -> {
@@ -299,13 +300,15 @@ public class Parser implements IParser{
                 position++;
                 Expr right=expression();
                 if(!check(Kind.RANGLE)) throw new SyntaxException("Expected '>>' at end of color expression");
+                position++;
                 return new ColorExpr(t, left, middle, right);
             }
             case KW_CONSOLE -> {
+                position++;
                 return new ConsoleExpr(t);
             }
             default -> {
-                throw new SyntaxException("Unexpected token");
+                throw new SyntaxException("Unexpected token in primary expression");
             }
 
         }
@@ -352,10 +355,12 @@ public class Parser implements IParser{
             if(check(Kind.LSQUARE)){
                 selector=pixelSelector();
             }
-            if(check(Kind.EQUALS)){
+            if(check(Kind.ASSIGN)){
+                position++;
                 return new AssignmentStatement(head, head.getText(), selector, expression());
             }
             else if(check(Kind.LARROW)){
+                position++;
                 return new ReadStatement(head, head.getText(), selector, expression());
             }
             else throw new SyntaxException("Unexpected character in statement");

@@ -283,7 +283,7 @@ public class Lexer implements ILexer {
 
                 //POTENTIAL ERROR: THIS IS WHAT VISHWA WROTE. MAKE SURE THERE'S NOTHING WRONG HERE.
                 String text=code.substring(startPos, pos+1);
-                if (text.equals("string") || text.equals("int") || text.equals("float") || text.equals("boolean") || text.equals("color") || text.equals("image") || text.equals("void")) {
+                if (text.equals("string") || text.equals("int") || text.equals("float") || text.equals("boolean") || text.equals("color") || text.equals("image")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.TYPE, text);
                 }
 
@@ -327,6 +327,9 @@ public class Lexer implements ILexer {
 
                 else if (text.equals("console")) {
                     return new Token(new SourceLocation(line, startColumn), Kind.KW_CONSOLE, text);
+                }
+                else if (text.equals("void")) {
+                    return new Token(new SourceLocation(line, startColumn), Kind.KW_VOID, text);
                 }
                 return new Token(new SourceLocation(line, startColumn), Kind.IDENT, text);
 

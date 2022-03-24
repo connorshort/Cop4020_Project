@@ -303,17 +303,24 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
 		Type type=(Type)declaration.getNameDef().visit(this, arg);
 		Type exprType=(Type)declaration.getExpr().visit(this, arg);
+		boolean compatible=false;
 		if(type==IMAGE){
 			check(exprType==IMAGE || declaration.getNameDef().getDim()!=null, declaration, "Image must be" +
 					"assigned either an Image or have a Dimension");
+			compatible=true;
 		}
 		if(declaration.getOp().getKind()==Kind.ASSIGN){
-			//TODO define as above for assignment statements
+			if(type==exprType) compatible=true;
+			else if ((type==INT && exprType==FLOAT) || (type==FLOAT && exprType==INT) ||
+					(type==INT && exprType==COLOR) || (type==COLOR && exprType==INT)){
+				declaration.getExpr().setCoerceTo(type);
+				compatible=true;
+			}
 		}
 		else if(declaration.getOp().getKind()==Kind.LARROW){
-			//TODO define as above for read statements
+			check(exprType==CONSOLE || exprType==STRING, declaration, "Right side must be CONSOLE or STRING");
 		}
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+		return null;
 	}
 
 

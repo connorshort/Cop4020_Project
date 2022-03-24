@@ -203,6 +203,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
 		String name=identExpr.getText();
 		check(symbolTable.getDeclaration(name) != null, identExpr, "ident is not in symbol table");
+		check(symbolTable.getDeclaration(name).isInitialized(), identExpr, "ident: " + name + " is not initialized");
 		Type returnType=symbolTable.getDeclaration(name).getType();
 		identExpr.setType(returnType);
 		return returnType;
@@ -302,14 +303,20 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
 		Type type=(Type)declaration.getNameDef().visit(this, arg);
-		Type exprType=(Type)declaration.getExpr().visit(this, arg);
+		Type exprType=null;
+		if(declaration.getOp()!=null) {
+			exprType = (Type) declaration.getExpr().visit(this, arg);
+		}
 		boolean compatible=false;
 		if(type==IMAGE){
 			check(exprType==IMAGE || declaration.getNameDef().getDim()!=null, declaration, "Image must be" +
 					"assigned either an Image or have a Dimension");
 			compatible=true;
 		}
-		if(declaration.getOp().getKind()==Kind.ASSIGN){
+		else if(declaration.getOp()==null){
+			return null;
+		}
+		else if(declaration.getOp().getKind()==Kind.ASSIGN){
 			if(type==exprType) compatible=true;
 			else if ((type==INT && exprType==FLOAT) || (type==FLOAT && exprType==INT) ||
 					(type==INT && exprType==COLOR) || (type==COLOR && exprType==INT)){
@@ -320,6 +327,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		else if(declaration.getOp().getKind()==Kind.LARROW){
 			check(exprType==CONSOLE || exprType==STRING, declaration, "Right side must be CONSOLE or STRING");
 		}
+		declaration.getNameDef().setInitialized(true);
 		return null;
 	}
 
@@ -355,8 +363,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		String name=nameDefWithDim.getName();
 		boolean added=symbolTable.add(name, nameDefWithDim);
 		check(added, nameDefWithDim, "variable: " + name + " already added");
-		check(nameDefWithDim.getDim().getHeight().getType()==INT &&
-				nameDefWithDim.getDim().getWidth().getType()==INT, nameDefWithDim, "Dimension must use integers");
+		nameDefWithDim.getDim().visit(this, arg);
 		return nameDefWithDim.getType();
 	}
  

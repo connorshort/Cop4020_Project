@@ -252,6 +252,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		assignmentStatement.setTargetDec(targetDec);
 		boolean compatible=false;
 		if(targetType != IMAGE){
+			check(assignmentStatement.getSelector()==null, assignmentStatement, "non image can't have" +
+					"pixel selector");
 			if(targetType==exprType) compatible=true;
 			else if ((targetType==INT && exprType==FLOAT) || (targetType==FLOAT && exprType==INT) ||
 					(targetType==INT && exprType==COLOR) || (targetType==COLOR && exprType==INT)){
@@ -268,19 +270,26 @@ public class TypeCheckVisitor implements ASTVisitor {
 				}
 			}
 			else{
-				//TODO: Case target type is an image with a pixel selector
-				//TODO: Deal with scope of pixel selector
-				Type xType = (Type) assignmentStatement.getSelector().getX().visit(this, arg);
-				check(xType == INT, assignmentStatement.getSelector().getX(), "only ints as left hand pixel selector expressions");
-				Type yType = (Type) assignmentStatement.getSelector().getY().visit(this, arg);
-				check(yType == INT || yType == COLOR || yType == COLORFLOAT || yType == FLOAT, assignmentStatement.getSelector().getX(), "Type of right hand side myst be COLOR, COLORFLOAT, FLOAT, or INT");
-				if (yType == INT || yType == COLOR || yType == COLORFLOAT || yType == FLOAT) {
-					assignmentStatement.getSelector().getY().setCoerceTo(COLOR);
+				String nameX=assignmentStatement.getSelector().getX().getText();
+				String nameY=assignmentStatement.getSelector().getY().getText();
+				check(symbolTable.getDeclaration(nameX)==null && symbolTable.getDeclaration(nameY)==null, assignmentStatement,
+						"variables in pixel selector cannot be global variables");
+				assignmentStatement.getSelector().getX().setType(INT);
+				assignmentStatement.getSelector().getY().setType(INT);
+				check(assignmentStatement.getSelector().getX() instanceof IdentExpr &&
+								assignmentStatement.getSelector().getY() instanceof IdentExpr , assignmentStatement,
+						"Pixel selector on left side of assignment has non ident");
+				if (exprType == INT || exprType == COLOR || exprType == COLORFLOAT || exprType == FLOAT) {
+					compatible=true;
+					if (exprType == INT || exprType == COLORFLOAT || exprType == FLOAT) {
+						assignmentStatement.getExpr().setCoerceTo(COLOR);
+					}
 				}
 			}
 
 		}
-		check(compatible, assignmentStatement, "incompatible types in assignment");
+		check(compatible, assignmentStatement, "incompatible types in assignment of variable: "
+				+ assignmentStatement.getName());
 		targetDec.setInitialized(true);
 		return null;
 	}
@@ -302,6 +311,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Type targetType=targetDec.getType();
 		Type rightType=(Type)readStatement.getSource().visit(this, arg);
 		check(targetType!=null, readStatement, "variable is not declared");
+		check(targetType==IMAGE || readStatement.getName()==null, readStatement, "variable: " +
+				readStatement.getName() + "is not an image, so it cannot have a pixel selector");
 		check(rightType==CONSOLE || rightType==STRING, readStatement, "Right side must be CONSOLE or STRING");
 		targetDec.setInitialized(true);
 		return null;

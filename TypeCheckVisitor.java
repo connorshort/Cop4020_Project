@@ -268,6 +268,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 			else{
 				//TODO: Case target type is an image with a pixel selector
+				//TODO: Deal with scope of pixel selector
 			}
 
 		}
@@ -301,6 +302,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
 		Type type=(Type)declaration.getNameDef().visit(this, arg);
+		Type exprType=(Type)declaration.getExpr().visit(this, arg);
+		if(type==IMAGE){
+			check(exprType==IMAGE || declaration.getNameDef().getDim()!=null, declaration, "Image must be" +
+					"assigned either an Image or have a Dimension");
+		}
 		if(declaration.getOp().getKind()==Kind.ASSIGN){
 			//TODO define as above for assignment statements
 		}

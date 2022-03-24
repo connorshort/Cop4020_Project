@@ -270,6 +270,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else{
 				//TODO: Case target type is an image with a pixel selector
 				//TODO: Deal with scope of pixel selector
+				Type xType = (Type) assignmentStatement.getSelector().getX().visit(this, arg);
+				check(xType == INT, assignmentStatement.getSelector().getX(), "only ints as left hand pixel selector expressions");
+				Type yType = (Type) assignmentStatement.getSelector().getY().visit(this, arg);
+				check(yType == INT || yType == COLOR || yType == COLORFLOAT || yType == FLOAT, assignmentStatement.getSelector().getX(), "Type of right hand side myst be COLOR, COLORFLOAT, FLOAT, or INT");
+				if (yType == INT || yType == COLOR || yType == COLORFLOAT || yType == FLOAT) {
+					assignmentStatement.getSelector().getY().setCoerceTo(COLOR);
+				}
 			}
 
 		}

@@ -210,9 +210,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-		Type conditionType=conditionalExpr.getCondition().getType();
-		Type trueCaseType=conditionalExpr.getTrueCase().getType();
-		Type falseCaseType=conditionalExpr.getFalseCase().getType();
+		Type conditionType=(Type)conditionalExpr.getCondition().visit(this, arg);
+		Type trueCaseType=(Type)conditionalExpr.getTrueCase().visit(this, arg);;
+		Type falseCaseType=(Type)conditionalExpr.getFalseCase().visit(this, arg);;
 		check(conditionType==BOOLEAN, conditionalExpr, "condition must be boolean");
 		check(trueCaseType==falseCaseType, conditionalExpr, "true and false cases must be same type");
 		conditionalExpr.setType(trueCaseType);
@@ -244,10 +244,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 	//This method several cases--you don't have to implement them all at once.
 	//Work incrementally and systematically, testing as you go.  
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-		//TODO:  implement this method
 		Declaration targetDec= symbolTable.getDeclaration(assignmentStatement.getName());
 		check(targetDec!=null, assignmentStatement, "variable is undeclared: " + assignmentStatement.getName());
-		Type targetType=(Type) targetDec.getType();
+		Type targetType=targetDec.getType();
 		Type exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
 		assignmentStatement.setTargetDec(targetDec);
 		boolean compatible=false;
@@ -260,13 +259,21 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 		}
 		else{
-			if(assignmentStatement.getSelector() != null){
-				
+			if(assignmentStatement.getSelector() == null){
+				if(exprType==COLOR || exprType==COLORFLOAT || exprType==INT || exprType==FLOAT){
+					compatible=true;
+					if(exprType==INT) assignmentStatement.getExpr().setCoerceTo(COLOR);
+					else if(exprType==FLOAT) assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
+				}
 			}
+			else{
+				//TODO: Case target type is an image with a pixel selector
+			}
+
 		}
 		check(compatible, assignmentStatement, "incompatible types in assignment");
 		targetDec.setInitialized(true);
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+		return null;
 	}
 
 
@@ -282,26 +289,38 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-		//TODO:  implement this method
-
-
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+		Declaration targetDec=symbolTable.getDeclaration(readStatement.getName());
+		Type targetType=targetDec.getType();
+		Type rightType=(Type)readStatement.getSource().visit(this, arg);
+		check(targetType!=null, readStatement, "variable is not declared");
+		check(rightType==CONSOLE || rightType==STRING, readStatement, "Right side must be CONSOLE or STRING");
+		targetDec.setInitialized(true);
+		return null;
 	}
 
 	@Override
 	public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
-		//TODO:  implement this method
+		Type type=(Type)declaration.getNameDef().visit(this, arg);
+		if(declaration.getOp().getKind()==Kind.ASSIGN){
+			//TODO define as above for assignment statements
+		}
+		else if(declaration.getOp().getKind()==Kind.LARROW){
+			//TODO define as above for read statements
+		}
 		throw new UnsupportedOperationException("Unimplemented visit method.");
 	}
 
 
 	@Override
-	public Object visitProgram(Program program, Object arg) throws Exception {		
-		//TODO:  this method is incomplete, finish it.  
-		
+	public Object visitProgram(Program program, Object arg) throws Exception {
 		//Save root of AST so return type can be accessed in return statements
 		root = program;
-		
+
+		List<NameDef> params=program.getParams();
+		for (NameDef node : params) {
+			node.visit(this, arg);
+			node.setInitialized(true);
+		}
 		//Check declarations and statements
 		List<ASTNode> decsAndStatements = program.getDecsAndStatements();
 		for (ASTNode node : decsAndStatements) {
@@ -312,14 +331,20 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-		//TODO:  implement this method
-		throw new UnsupportedOperationException();
+		String name=nameDef.getName();
+		boolean added=symbolTable.add(name, nameDef);
+		check(added, nameDef, "variable: " + name + " already added");
+		return nameDef.getType();
 	}
 
 	@Override
 	public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-		//TODO:  implement this method
-		throw new UnsupportedOperationException();
+		String name=nameDefWithDim.getName();
+		boolean added=symbolTable.add(name, nameDefWithDim);
+		check(added, nameDefWithDim, "variable: " + name + " already added");
+		check(nameDefWithDim.getDim().getHeight().getType()==INT &&
+				nameDefWithDim.getDim().getWidth().getType()==INT, nameDefWithDim, "Dimension must use integers");
+		return nameDefWithDim.getType();
 	}
  
 	@Override

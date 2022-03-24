@@ -14,6 +14,7 @@ public class SymbolTable {
     public boolean add(String name, Declaration declaration){
         return (symbols.putIfAbsent(name, declaration)==null);
     }
+    public Declaration remove(String name){return symbols.remove(name);}
 
     public Declaration getDeclaration(String name){
         return symbols.get(name);

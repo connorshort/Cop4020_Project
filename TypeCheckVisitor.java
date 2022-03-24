@@ -248,7 +248,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Declaration targetDec= symbolTable.getDeclaration(assignmentStatement.getName());
 		check(targetDec!=null, assignmentStatement, "variable is undeclared: " + assignmentStatement.getName());
 		Type targetType=targetDec.getType();
-		Type exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
+		Type exprType=null;
+		if(assignmentStatement.getSelector()==null){
+			exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
+		}
 		assignmentStatement.setTargetDec(targetDec);
 		boolean compatible=false;
 		if(targetType != IMAGE){
@@ -279,12 +282,17 @@ public class TypeCheckVisitor implements ASTVisitor {
 				check(assignmentStatement.getSelector().getX() instanceof IdentExpr &&
 								assignmentStatement.getSelector().getY() instanceof IdentExpr , assignmentStatement,
 						"Pixel selector on left side of assignment has non ident");
+				symbolTable.add(nameX, new VarDeclaration(null, null, null, null));
+				symbolTable.add(nameY, new VarDeclaration(null, null, null, null));
+				exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
 				if (exprType == INT || exprType == COLOR || exprType == COLORFLOAT || exprType == FLOAT) {
 					compatible=true;
 					if (exprType == INT || exprType == COLORFLOAT || exprType == FLOAT) {
 						assignmentStatement.getExpr().setCoerceTo(COLOR);
 					}
 				}
+				symbolTable.remove(nameX);
+				symbolTable.remove(nameY);
 			}
 
 		}

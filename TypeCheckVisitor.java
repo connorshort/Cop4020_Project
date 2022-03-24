@@ -221,7 +221,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-		
+		Type leftType = (Type) dimension.getHeight().visit(this, arg);
+		check(leftType == Type.INT, dimension.getHeight(), "only ints as dimension components");
+		Type rightType = (Type) dimension.getWidth().visit(this, arg);
+		check(rightType == Type.INT, dimension.getWidth(), "only ints as dimension components");
+		return null;
 	}
 
 	@Override
@@ -241,6 +245,27 @@ public class TypeCheckVisitor implements ASTVisitor {
 	//Work incrementally and systematically, testing as you go.  
 	public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
 		//TODO:  implement this method
+		Declaration targetDec= symbolTable.getDeclaration(assignmentStatement.getName());
+		check(targetDec!=null, assignmentStatement, "variable is undeclared: " + assignmentStatement.getName());
+		Type targetType=(Type) targetDec.getType();
+		Type exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
+		assignmentStatement.setTargetDec(targetDec);
+		boolean compatible=false;
+		if(targetType != IMAGE){
+			if(targetType==exprType) compatible=true;
+			else if ((targetType==INT && exprType==FLOAT) || (targetType==FLOAT && exprType==INT) ||
+					(targetType==INT && exprType==COLOR) || (targetType==COLOR && exprType==INT)){
+				assignmentStatement.getExpr().setCoerceTo(targetType);
+				compatible=true;
+			}
+		}
+		else{
+			if(assignmentStatement.getSelector() != null){
+				
+			}
+		}
+		check(compatible, assignmentStatement, "incompatible types in assignment");
+		targetDec.setInitialized(true);
 		throw new UnsupportedOperationException("Unimplemented visit method.");
 	}
 
@@ -258,6 +283,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
 		//TODO:  implement this method
+
+
 		throw new UnsupportedOperationException("Unimplemented visit method.");
 	}
 

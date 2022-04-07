@@ -124,7 +124,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Kind op = unaryExpr.getOp().getKind();
 		Type exprType = (Type) unaryExpr.getExpr().visit(this, arg);
 		//Use the lookup table above to both check for a legal combination of operator and expression, and to get result type.
-		Type resultType = unaryExprs.get(new Pair<Kind,Type>(op,exprType));
+		Type resultType;
+		if(op==null) resultType=exprType;
+		else resultType = unaryExprs.get(new Pair<Kind,Type>(op,exprType));
 		check(resultType != null, unaryExpr, "incompatible types for unaryExpr");
 		//Save the type of the unary expression in the AST node for use in code generation later. 
 		unaryExpr.setType(resultType);
@@ -152,18 +154,26 @@ public class TypeCheckVisitor implements ASTVisitor {
 				resultType = INT;
 			else if (leftType == FLOAT && rightType == FLOAT)
 				resultType = FLOAT;
-			else if (leftType == INT && leftCoerce == FLOAT && rightType == FLOAT)
+			else if (leftType == INT && rightType == FLOAT) {
+				binaryExpr.getLeft().setCoerceTo(FLOAT);
 				resultType = FLOAT;
-			else if (leftType == FLOAT && rightCoerce == FLOAT && rightType == INT)
+			}
+			else if (leftType == FLOAT && rightType == INT) {
+				binaryExpr.getRight().setCoerceTo(FLOAT);
 				resultType = FLOAT;
+			}
 			else if (leftType == COLOR && rightType == COLOR)
 				resultType = COLOR;
 			else if (leftType == COLORFLOAT && rightType == COLORFLOAT)
 				resultType = COLORFLOAT;
-			else if (leftType == COLOR && leftCoerce == COLORFLOAT && rightType == COLORFLOAT)
+			else if (leftType == COLOR && rightType == COLORFLOAT) {
+				binaryExpr.getLeft().setCoerceTo(COLORFLOAT);
 				resultType = COLORFLOAT;
-			else if (leftType == COLORFLOAT && rightCoerce == COLORFLOAT && rightType == COLOR)
+			}
+			else if (leftType == COLORFLOAT && rightType == COLOR){
+				binaryExpr.getRight().setCoerceTo(COLORFLOAT);
 				resultType = COLORFLOAT;
+			}
 			else if (leftType == IMAGE && rightType == IMAGE)
 				resultType = IMAGE;
 			else if (op==Kind.TIMES || op==Kind.DIV || op == Kind.MOD){
@@ -171,14 +181,24 @@ public class TypeCheckVisitor implements ASTVisitor {
 					resultType = IMAGE;
 				else if (leftType == IMAGE && rightType == FLOAT)
 					resultType = IMAGE;
-				else if (leftType == INT && leftCoerce == COLOR && rightType == COLOR)
+				else if (leftType == INT && rightType == COLOR) {
+					binaryExpr.getLeft().setCoerceTo(COLOR);
 					resultType = COLOR;
-				else if (leftType == COLOR && rightCoerce == COLOR && rightType == COLOR)
+				}
+				else if (leftType == COLOR && rightType == INT) {
+					binaryExpr.getRight().setCoerceTo(COLOR);
 					resultType = COLOR;
-				else if (leftType == FLOAT && leftCoerce==COLORFLOAT && rightCoerce == COLORFLOAT && rightType == COLOR)
+				}
+				else if (leftType == FLOAT &&  rightType == COLOR) {
+					binaryExpr.getLeft().setCoerceTo(COLORFLOAT);
+					binaryExpr.getRight().setCoerceTo(COLORFLOAT);
 					resultType = COLORFLOAT;
-				else if (leftType == COLOR && leftCoerce==COLORFLOAT && rightCoerce == COLORFLOAT && rightType == FLOAT)
+				}
+				else if (leftType == COLOR && rightType == FLOAT) {
 					resultType = COLORFLOAT;
+					binaryExpr.getLeft().setCoerceTo(COLORFLOAT);
+					binaryExpr.getRight().setCoerceTo(COLORFLOAT);
+				}
 			}
 		}
 		else if(op==Kind.LT || op==Kind.LE || op == Kind.GT || op == Kind.GE){
@@ -193,7 +213,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		}
 
 
-		check(resultType != null, binaryExpr, "incompatible types for unaryExpr");
+		check(resultType != null, binaryExpr, "incompatible types for binary expression");
 		binaryExpr.setType(resultType);
 		return resultType;
 
@@ -266,7 +286,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		}
 		else{
 			if(assignmentStatement.getSelector() == null){
-				if(exprType==COLOR || exprType==COLORFLOAT || exprType==INT || exprType==FLOAT){
+				if(exprType==COLOR || exprType==COLORFLOAT || exprType==INT || exprType==FLOAT ||
+				exprType==IMAGE){
 					compatible=true;
 					if(exprType==INT) assignmentStatement.getExpr().setCoerceTo(COLOR);
 					else if(exprType==FLOAT) assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);

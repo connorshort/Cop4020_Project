@@ -327,7 +327,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		check(targetType==IMAGE || readStatement.getName()==null, readStatement, "variable: " +
 				readStatement.getName() + "is not an image, so it cannot have a pixel selector");
 		check(rightType==CONSOLE || rightType==STRING, readStatement, "Right side must be CONSOLE or STRING");
-		if(targetType==INT || targetType==STRING || targetType==COLOR) readStatement.getSource().setCoerceTo(targetType);
+		if(rightType==CONSOLE) readStatement.getSource().setCoerceTo(targetType);
 		targetDec.setInitialized(true);
 		return null;
 	}

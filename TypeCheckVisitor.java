@@ -358,6 +358,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		}
 		else if(declaration.getOp().getKind()==Kind.LARROW){
 			check(exprType==CONSOLE || exprType==STRING, declaration, "Right side must be CONSOLE or STRING");
+			if(exprType==CONSOLE) declaration.getExpr().setCoerceTo(type);
 		}
 		declaration.getNameDef().setInitialized(true);
 		return null;

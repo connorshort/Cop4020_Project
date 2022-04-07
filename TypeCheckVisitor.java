@@ -282,8 +282,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 				check(assignmentStatement.getSelector().getX() instanceof IdentExpr &&
 								assignmentStatement.getSelector().getY() instanceof IdentExpr , assignmentStatement,
 						"Pixel selector on left side of assignment has non ident");
-				symbolTable.add(nameX, new VarDeclaration(null, null, null, null));
-				symbolTable.add(nameY, new VarDeclaration(null, null, null, null));
+				symbolTable.add(nameX, new VarDeclaration(assignmentStatement.getFirstToken(),
+						new NameDef(assignmentStatement.getFirstToken(),"int", nameX), null, null));
+				symbolTable.getDeclaration(nameX).setInitialized(true);
+				symbolTable.add(nameY, new VarDeclaration(assignmentStatement.getFirstToken(),
+						new NameDef(assignmentStatement.getFirstToken(),"int", nameY), null, null));
+				symbolTable.getDeclaration(nameY).setInitialized(true);
 				exprType=(Type) assignmentStatement.getExpr().visit(this, arg);
 				if (exprType == INT || exprType == COLOR || exprType == COLORFLOAT || exprType == FLOAT) {
 					compatible=true;
@@ -319,9 +323,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Type targetType=targetDec.getType();
 		Type rightType=(Type)readStatement.getSource().visit(this, arg);
 		check(targetType!=null, readStatement, "variable is not declared");
+		if(readStatement.getSelector()!=null)
 		check(targetType==IMAGE || readStatement.getName()==null, readStatement, "variable: " +
 				readStatement.getName() + "is not an image, so it cannot have a pixel selector");
 		check(rightType==CONSOLE || rightType==STRING, readStatement, "Right side must be CONSOLE or STRING");
+		if(targetType==INT || targetType==STRING || targetType==COLOR) readStatement.getSource().setCoerceTo(targetType);
 		targetDec.setInitialized(true);
 		return null;
 	}

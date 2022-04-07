@@ -25,5 +25,14 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="TEST" name="junit-4.10" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES />
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/edu.ufl.cise.plc.runtimeV0.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

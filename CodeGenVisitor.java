@@ -35,7 +35,6 @@ import edu.ufl.cise.plc.ast.VarDeclaration;
 import edu.ufl.cise.plc.ast.WriteStatement;
 
 import edu.ufl.cise.plc.runtime.ConsoleIO;
-import edu.ufl.cise.plc.CodeGenStringBuilder;
 
 import static edu.ufl.cise.plc.ast.Types.Type.*;
 
@@ -507,9 +506,9 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
         return null;
     }
-<<<<<<< Updated upstream
+
 }
 
-=======
-}
->>>>>>> Stashed changes
+
+
+

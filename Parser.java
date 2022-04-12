@@ -92,7 +92,7 @@ public class Parser implements IParser{
                 }
                 position++;
             }
-            else throw new SyntaxException("Syntax error: Unexpected token");
+            else throw new SyntaxException("Syntax error: Unexpected token at position " + position);
         }
         return new Program(head, type, name, params, decsAndStatements);
     }

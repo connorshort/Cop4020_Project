@@ -206,10 +206,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 				resultType = BOOLEAN;
 			else if (leftType == FLOAT && rightType == FLOAT)
 				resultType = BOOLEAN;
-			else if (leftType == INT && leftCoerce==FLOAT && rightType == FLOAT)
+			else if (leftType == INT && rightType == FLOAT) {
+				binaryExpr.getLeft().setCoerceTo(FLOAT);
 				resultType = BOOLEAN;
-			else if (leftType == FLOAT && rightCoerce==FLOAT && rightType == INT)
+			}
+			else if (leftType == FLOAT && rightType == INT) {
+				binaryExpr.getRight().setCoerceTo(FLOAT);
 				resultType = BOOLEAN;
+			}
 		}
 
 

@@ -803,6 +803,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg2 += "(" + type + ")";
             }
         }
+        arg2 += assignmentStatement.getName();
+        arg2 += " = ";
         arg2 = expr.visit(this, arg2);
         arg2 = arg2 + ";" + "\n";
         arg += (String)arg2;

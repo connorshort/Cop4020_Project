@@ -453,15 +453,30 @@ public class CodeGenVisitor implements ASTVisitor {
         if (leftType == IMAGE || leftType == COLOR || leftType == COLORFLOAT
                 || rightType == IMAGE || rightType == COLOR || rightType == COLORFLOAT) {
 
-            if (leftType == IMAGE || rightType == IMAGE) {
-                imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
-            }
-            if (leftType == COLOR || leftType == COLORFLOAT || rightType == COLOR || rightType == COLORFLOAT) {
-                imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
-            }
+            imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
 
             if (leftType == IMAGE && rightType == COLOR || leftType == COLOR && rightType == IMAGE) {
 
+            }
+
+            else if (leftType == COLOR && rightType == COLOR) {
+                arg2 += "(ImageOps.binaryTupleOp(ImageOps.OP.valueOf(";
+                if (op == Kind.DIV) {
+                    arg2 += "\"DIV\"),";
+                }
+                else if (op == Kind.MINUS) {
+                    arg2 += "\"MINUS\"), ";
+                }
+                else if (op == Kind.PLUS) {
+                    arg2 += "\"PLUS\"), ";
+                }
+                else if (op == Kind.TIMES) {
+                    arg2 += "\"TIMES\"), ";
+                }
+                arg2 += leftExpr.getText();
+                arg2 += ", ";
+                arg2 += rightExpr.getText();
+                arg2 += "))";
             }
 
             else if (leftType == IMAGE && rightType == INT || leftType == INT && rightType == IMAGE) {

@@ -447,6 +447,26 @@ public class CodeGenVisitor implements ASTVisitor {
                 return arg;
 
             }
+            else if (leftExpr.getType() == COLOR) {
+                if (op == Kind.NOT_EQUALS) {
+                    if (leftExpr.getText() != rightExpr.getText()) {
+                        arg += "true";
+
+                    }
+                    else {
+                        arg += "false";
+                    }
+                }
+                else {
+                    if (leftExpr.getText() == rightExpr.getText()) {
+                        arg += "true";
+                    }
+                    else {
+                        arg += "false";
+                    }
+                }
+                return arg;
+            }
 
         }
 
@@ -476,17 +496,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (op == Kind.MOD) {
                     arg2 += "\"MOD\"), ";
                 }
-                else if (op == Kind.EQUALS) {
-                    boolean x = (leftExpr.getText().equals(rightExpr.getText()));
-                    if (x) {
-                        arg += "true";
-                    }
-                    else {
-                        arg += "false";
-                    }
-                    return arg;
 
-                }
                 arg2 = leftExpr.visit(this, arg2);
                 arg2 += ", ";
                 arg2 = rightExpr.visit(this, arg2);

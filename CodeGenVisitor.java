@@ -473,6 +473,20 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (op == Kind.TIMES) {
                     arg2 += "\"TIMES\"), ";
                 }
+                else if (op == Kind.MOD) {
+                    arg2 += "\"MOD\"), ";
+                }
+                else if (op == Kind.EQUALS) {
+                    boolean x = (leftExpr.getText().equals(rightExpr.getText()));
+                    if (x) {
+                        arg += "true";
+                    }
+                    else {
+                        arg += "false";
+                    }
+                    return arg;
+
+                }
                 arg2 = leftExpr.visit(this, arg2);
                 arg2 += ", ";
                 arg2 = rightExpr.visit(this, arg2);
@@ -530,7 +544,7 @@ public class CodeGenVisitor implements ASTVisitor {
             imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
         }
         else {
-            imports = "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
+            imports += "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
         }
 
         String Type = "";
@@ -851,7 +865,7 @@ public class CodeGenVisitor implements ASTVisitor {
         arg = blue.visit(this, arg);
         arg += ")";
 
-        imports = "import edu.ufl.cise.plc.runtime.ColorTuple;\n";
+        imports += "import edu.ufl.cise.plc.runtime.ColorTuple;\n";
 
         return arg;
     }
@@ -889,14 +903,8 @@ public class CodeGenVisitor implements ASTVisitor {
         if (nameDefWithDim.getType() == IMAGE) {
             Type = "BufferedImage";
 
-            if (imports.length() != 0) {
-                imports += "import java.awt.image.BufferedImage;\n";
+            imports += "import java.awt.image.BufferedImage;\n";
 
-            }
-            else {
-                imports = "import java.awt.image.BufferedImage;\n";
-
-            }
 
 
 

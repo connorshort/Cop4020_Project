@@ -336,13 +336,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
                 else if (coerce == IMAGE) {
                     Type = "BufferedImage";
-                    if (declaration.getExpr().getType() == STRING) {
-                        arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
-                        arg2 = declaration.getExpr().visit(this, arg2);
-                        arg2 += ");";
-                        arg += (String)arg2;
-                        return arg;
-                    }
 
                 }
 

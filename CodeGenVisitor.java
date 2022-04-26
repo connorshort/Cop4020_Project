@@ -473,9 +473,9 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (op == Kind.TIMES) {
                     arg2 += "\"TIMES\"), ";
                 }
-                arg2 += leftExpr.getText();
+                arg2 = leftExpr.visit(this, arg2);
                 arg2 += ", ";
-                arg2 += rightExpr.getText();
+                arg2 = rightExpr.visit(this, arg2);
                 arg2 += "))";
             }
 

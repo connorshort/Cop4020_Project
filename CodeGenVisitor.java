@@ -860,39 +860,54 @@ public class CodeGenVisitor implements ASTVisitor {
             arg = arg + "(" + type + ")" + "\n";
             file = readStatement.getSource().getText();
 
-            if (readStatement.getTargetDec().getDim() != null) {
+            if (readStatement.getTargetDec().getType() == IMAGE) {
+                if (readStatement.getTargetDec().getDim() != null) {
+                    if (file.length() >= 5) {
+                        if (file.substring(0, 5).equals("\"http") || file.substring(file.length() - 6,file.length() - 1).equals(".jpeg")) {
+                            imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
+                            arg += "ImageOps.resize(";
+                            arg += "FileURLIO.readImage(";
+                            arg = arg + file + ")";
+                            arg += ", ";
+                            arg = readStatement.getTargetDec().getDim().visit(this, arg);
+                            arg += ");\n";
+                            return arg;
+                        }
+                    }
+
+                }
+
+                System.out.println(file.length());
                 if (file.length() >= 5) {
                     if (file.substring(0, 5).equals("\"http")) {
-                        imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
-                        arg += "ImageOps.resize(";
                         arg += "FileURLIO.readImage(";
-                        arg = arg + file + ")";
-                        arg += ", ";
-                        arg = readStatement.getTargetDec().getDim().visit(this, arg);
+                        arg += file;
                         arg += ");\n";
                         return arg;
                     }
                 }
 
-            }
 
-            System.out.println(file.length());
-            if (file.length() >= 5) {
-                if (file.substring(0, 5).equals("\"http")) {
-                    arg += "FileURLIO.readImage(";
-                    arg += file;
+                if (readStatement.getTargetDec().getDim() != null) {
+
+                    imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
+                    arg += "ImageOps.resize(";
+                    arg += "FileURLIO.readValueFromFile(";
+                    arg = arg + file + ")";
+                    arg += ", ";
+                    arg = readStatement.getTargetDec().getDim().visit(this, arg);
                     arg += ");\n";
                     return arg;
+
+
+
                 }
             }
 
-            arg += "FileURLIO.readValueFromFile(";
-
-
-
+            else {
+                arg += "FileURLIO.readValueFromFile(";
+            }
             arg = arg + file + ");";
-
-
 
 
         }

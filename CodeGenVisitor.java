@@ -43,6 +43,7 @@ import static edu.ufl.cise.plc.ast.Types.Type.*;
 public class CodeGenVisitor implements ASTVisitor {
     String packageName = "";
     String imports = "";
+    String file = "";
 
 
     public CodeGenVisitor(String packageName) {
@@ -312,6 +313,40 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg2 = declaration.getExpr().visit(this, arg2);
                 arg += (String)arg2;
                 arg += ";\n";
+                return arg;
+            }
+
+            else if (declaration.getOp().getKind() == Kind.LARROW && declaration.getExpr().getText().equals(file)) {
+                arg2 += " = ";
+                Type type = declaration.getNameDef().getType();
+
+                if (type == STRING) {
+                    arg2 += "(String) ";
+                }
+                else if (type == INT) {
+                    arg2 += "(int) ";
+                }
+
+                else if (type == FLOAT) {
+                    arg2 += "(float) ";
+                }
+
+                else if (type == COLOR) {
+                    arg2 += "(ColorTuple)";
+                }
+
+                else if (type == IMAGE) {
+                    arg2 += "(BufferedImage)";
+                }
+
+                else if (type == BOOLEAN) {
+                    arg2 += "(boolean)";
+                }
+
+                arg2 += "FileURLIO.readValueFromFile(";
+                arg2 += file;
+                arg += (String)arg2;
+                arg += ");\n";
                 return arg;
             }
 
@@ -814,6 +849,7 @@ public class CodeGenVisitor implements ASTVisitor {
             Expr source = writeStatement.getSource();
             arg = source.visit(this, arg);
             arg = arg + ", " + "" + writeStatement.getDest().getText() + "" + ");" + "\n";
+            file = writeStatement.getDest().getText();
 
         }
         else if (writeStatement.getSource().getType() == IMAGE && writeStatement.getDest().getType() == CONSOLE) {

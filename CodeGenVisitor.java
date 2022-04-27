@@ -920,7 +920,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg2 = assignmentStatement.getName();
                 arg2 += " = ";
                 arg2 = expr.visit(this, arg2);
-                arg2 += ");\n";
+                arg2 += ";\n";
                 arg += (String)arg2;
                 return arg;
             }

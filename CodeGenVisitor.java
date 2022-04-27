@@ -295,6 +295,16 @@ public class CodeGenVisitor implements ASTVisitor {
 
         String Type = "";
 
+        if (declaration.getOp() != null) {
+            if (declaration.getOp().getKind() == Kind.ASSIGN) {
+                arg2 += " = ";
+                arg2 = declaration.getExpr().visit(this, arg2);
+                arg += (String)arg2;
+                arg += ";\n";
+                return arg;
+            }
+        }
+
 
 
         if (nameDef.getType() == IMAGE) {
@@ -668,7 +678,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
 
                 arg2 = expr.visit(this, arg2);
-                arg2 += ")";
+                arg2 += ");";
                 arg += (String)arg2;
                 return arg;
 
@@ -953,18 +963,6 @@ public class CodeGenVisitor implements ASTVisitor {
             imports += "import java.awt.image.BufferedImage;\n";
 
 
-
-
-
-
-            /*arg += " = new BufferedImage(";
-            arg += nameDefWithDim.getDim().getWidth().getText();
-            arg += ", ";
-            arg += nameDefWithDim.getDim().getHeight().getText();
-            arg += ", BufferedImage.TYPE_INT_RGB)";*/
-
-
-
         }
         else if (nameDefWithDim.getType() == COLOR) {
             Type = "ColorTuple";
@@ -979,4 +977,5 @@ public class CodeGenVisitor implements ASTVisitor {
         return arg;
     }
 }
+
 

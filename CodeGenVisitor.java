@@ -356,7 +356,19 @@ public class CodeGenVisitor implements ASTVisitor {
                     arg2 += "(boolean)";
                 }
 
+                if (file.length() >= 5) {
+                    if (file.substring(0, 5).equals("\"http")) {
+                        arg2 += "FileURLIO.readImage(";
+                        arg2 += file;
+                        arg += (String)arg2;
+                        arg += ");\n";
+                        return arg;
+                    }
+                }
+
+
                 arg2 += "FileURLIO.readValueFromFile(";
+
                 arg2 += file;
                 arg += (String)arg2;
                 arg += ");\n";
@@ -421,6 +433,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 if (coerce == INT) {
                     Type = "int";
                     if (declaration.getExpr().getType() == STRING) {
+                        System.out.println("2");
                         arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
                         arg2 = declaration.getExpr().visit(this, arg2);
                         arg2 += ");";
@@ -431,6 +444,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (coerce == FLOAT) {
                     Type = "float";
                     if (declaration.getExpr().getType() == STRING) {
+                        System.out.println("3");
+
                         arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
                         arg2 = declaration.getExpr().visit(this, arg2);
                         arg2 += ");";
@@ -459,7 +474,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
                 else if (coerce == COLOR) {
                     Type = "ColorTuple";
-
                     arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
                     arg2 = declaration.getExpr().visit(this, arg2);
                     arg2 += ");";
@@ -711,7 +725,19 @@ public class CodeGenVisitor implements ASTVisitor {
 
         arg = arg + "(" + Type + ")";
         if (consoleExpr.getType() == STRING) {
+            if (file.length() >= 5) {
+                if (file.substring(0, 5).equals("\"http")) {
+                    arg += "FileURLIO.readImage(";
+                    arg += file;
+                    arg += ");\n";
+                    return arg;
+                }
+            }
+
+            System.out.println("6");
             arg += "FileURLIO.readValueFromFile(";
+
+
             arg = arg + consoleExpr.getText() + ")";
         }
         else {
@@ -832,9 +858,41 @@ public class CodeGenVisitor implements ASTVisitor {
             }
 
             arg = arg + "(" + type + ")" + "\n";
+            file = readStatement.getSource().getText();
+
+            if (readStatement.getTargetDec().getDim() != null) {
+                if (file.length() >= 5) {
+                    if (file.substring(0, 5).equals("\"http")) {
+                        imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
+                        arg += "ImageOps.resize(";
+                        arg += "FileURLIO.readImage(";
+                        arg = arg + file + ")";
+                        arg += ", ";
+                        arg = readStatement.getTargetDec().getDim().visit(this, arg);
+                        arg += ");\n";
+                        return arg;
+                    }
+                }
+
+            }
+
+            System.out.println(file.length());
+            if (file.length() >= 5) {
+                if (file.substring(0, 5).equals("\"http")) {
+                    arg += "FileURLIO.readImage(";
+                    arg += file;
+                    arg += ");\n";
+                    return arg;
+                }
+            }
 
             arg += "FileURLIO.readValueFromFile(";
-            arg = arg + readStatement.getSource().getText() + ");";
+
+
+
+            arg = arg + file + ");";
+
+
 
 
         }

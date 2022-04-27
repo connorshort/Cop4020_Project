@@ -77,7 +77,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
-        System.out.println("visitBooleanLitExpr");
         String kind = "";
 
         if (booleanLitExpr.getValue() == true) {
@@ -100,7 +99,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
-        System.out.println("visitStringLitExpr");
         String arg2 = "\"\"\"\n";
         arg2 = arg2 + stringLitExpr.getValue();
         arg2 += "\"\"\"";
@@ -112,7 +110,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
-        System.out.println("visitIntLitExpr");
         Object arg2 = String.valueOf(intLitExpr.getValue());
         Type type = intLitExpr.getCoerceTo() != null ? intLitExpr.getCoerceTo() : intLitExpr.getType();
 
@@ -125,7 +122,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
-        System.out.println("visitFloatLitExpr");
         Object arg2 = (Float.toString(floatLitExpr.getValue()));
         arg2 += "f";
 
@@ -140,7 +136,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
-        System.out.println("visitIdentExpr");
         if (identExpr.getCoerceTo() == IMAGE) {
             imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
             arg += "ImageOps.clone(";
@@ -164,7 +159,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        System.out.println("visitConditionalExpr");
         Expr condition = conditionalExpr.getCondition();
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
@@ -184,7 +178,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
-        System.out.println("visitProgram");
         arg = "";
         arg = arg + "public class " + program.getName() + "{" + "\n";
         arg = arg + "    " + "public static ";
@@ -254,7 +247,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-        System.out.println("visitNameDef");
         String Type = "";
         if (nameDef.getType() == INT) {
             Type = "int";
@@ -287,7 +279,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
-        System.out.println("visitReturnStatement");
         Expr expr = returnStatement.getExpr();
 
         arg += ("return ");
@@ -299,7 +290,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
-        System.out.println("visitVarDeclaration");
         Object arg2 = "";
         NameDef nameDef = declaration.getNameDef();
 
@@ -433,7 +423,6 @@ public class CodeGenVisitor implements ASTVisitor {
                 if (coerce == INT) {
                     Type = "int";
                     if (declaration.getExpr().getType() == STRING) {
-                        System.out.println("2");
                         arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
                         arg2 = declaration.getExpr().visit(this, arg2);
                         arg2 += ");";
@@ -444,7 +433,6 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (coerce == FLOAT) {
                     Type = "float";
                     if (declaration.getExpr().getType() == STRING) {
-                        System.out.println("3");
 
                         arg2 += "(" + Type + ") " + "FileURLIO.readValueFromFile(";
                         arg2 = declaration.getExpr().visit(this, arg2);
@@ -510,7 +498,6 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
 
 
-        System.out.println("visitBinaryExpr");
         Object arg2 = "";
         Type type = binaryExpr.getType();
         Expr leftExpr = binaryExpr.getLeft();
@@ -564,7 +551,6 @@ public class CodeGenVisitor implements ASTVisitor {
         if (leftType == IMAGE || leftType == COLOR || leftType == COLORFLOAT
                 || rightType == IMAGE || rightType == COLOR || rightType == COLORFLOAT) {
 
-            System.out.println("1");
             imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
 
             if (leftType == IMAGE && rightType == COLOR || leftType == COLOR && rightType == IMAGE) {
@@ -572,7 +558,6 @@ public class CodeGenVisitor implements ASTVisitor {
             }
 
             else if (leftType == COLOR && rightType == COLOR) {
-                System.out.println("2");
 
                 arg2 += "(ImageOps.binaryTupleOp(ImageOps.OP.valueOf(";
                 if (op == Kind.DIV) {
@@ -606,7 +591,6 @@ public class CodeGenVisitor implements ASTVisitor {
             }
 
             else if (leftType == IMAGE && rightType == INT || leftType == INT && rightType == IMAGE) {
-                System.out.println("3");
 
                 arg2 += "(ImageOps.binaryImageScalarOp(ImageOps.OP.valueOf(";
                 if (op == Kind.DIV) {
@@ -663,7 +647,6 @@ public class CodeGenVisitor implements ASTVisitor {
             }
         }
         else {
-            System.out.println("4");
 
             arg2 = "(";
             arg2 = binaryExpr.getLeft().visit(this, arg2);
@@ -685,7 +668,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
-        System.out.println("visitConsoleExpr");
         if (consoleExpr.getType() == STRING) {
             imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
         }
@@ -734,7 +716,6 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
             }
 
-            System.out.println("6");
             arg += "FileURLIO.readValueFromFile(";
 
 
@@ -759,11 +740,9 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpression, Object arg) throws Exception {
-        System.out.println("visitUnaryExpr");
         IToken op = unaryExpression.getOp();
         Expr expr = unaryExpression.getExpr();
         Object arg2 = op.getText();
-        System.out.println(arg2);
         if (op.getKind() == Kind.COLOR_OP) {
             if ((expr.getType() == INT)) {
 
@@ -877,7 +856,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
                 }
 
-                System.out.println(file.length());
                 if (file.length() >= 5) {
                     if (file.substring(0, 5).equals("\"http")) {
                         arg += "FileURLIO.readImage(";
@@ -924,7 +902,6 @@ public class CodeGenVisitor implements ASTVisitor {
         }
 
 
-        System.out.println("visitReadStatement");
 
         return arg;
     }
@@ -932,7 +909,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-        System.out.println("visitWriteStatement");
 
         if (writeStatement.getDest().getType() == STRING && writeStatement.getSource().getType() != IMAGE) {
             imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
@@ -945,7 +921,6 @@ public class CodeGenVisitor implements ASTVisitor {
         }
         else if (writeStatement.getSource().getType() == IMAGE && writeStatement.getDest().getType() == CONSOLE) {
 
-            System.out.println("Here");
             imports += "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
             arg += "ConsoleIO.displayImageOnScreen(";
             arg += writeStatement.getSource().getText();
@@ -971,7 +946,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-        System.out.println("visitAssignmentStatement");
         Object arg2 = "";
         Expr expr = assignmentStatement.getExpr();
         Type name = assignmentStatement.getTargetDec().getType();
@@ -1065,7 +1039,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
-        System.out.println("visitColorConstExpr");
         imports += "import java.awt.Color;\n";
         imports += "import edu.ufl.cise.plc.runtime.ColorTuple;\n";
         /*arg += "(new ColorTuple(ColorTuple.unpack(Color.";
@@ -1081,7 +1054,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitColorExpr(ColorExpr colorExpr, Object arg) throws Exception {
-        System.out.println("visitColorExpr");
         Expr red = colorExpr.getRed();
         Expr green = colorExpr.getGreen();
         Expr blue = colorExpr.getBlue();
@@ -1103,7 +1075,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        System.out.println("visitDimension");
         Object arg2 = "";
         arg2 = dimension.getWidth().visit(this, arg2);
         arg2 += ", ";
@@ -1115,7 +1086,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-        System.out.println("visitPixelSelector");
 
 
         return arg;
@@ -1124,7 +1094,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
-        System.out.println("visitUnaryExprPostfix");
         imports += "import java.awt.image.BufferedImage;\n";
         Object arg2 = "";
         arg2 += "ColorTuple.unpack(";
@@ -1141,7 +1110,6 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        System.out.println("visitNameDefWithDim");
 
 
 

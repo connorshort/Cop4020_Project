@@ -765,7 +765,7 @@ public class CodeGenVisitor implements ASTVisitor {
         Object arg2 = op.getText();
         System.out.println(arg2);
         if (op.getKind() == Kind.COLOR_OP) {
-            if ((expr.getType() == INT || expr.getType() == COLOR) && expr.getCoerceTo() != COLOR) {
+            if ((expr.getType() == INT)) {
 
                 if (arg2.equals("getRed")) {
                     arg2 = "ColorTuple.getRed(";
@@ -785,7 +785,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 return arg;
             }
 
-            else if (expr.getType() == IMAGE || expr.getCoerceTo() == COLOR) {
+            else if (expr.getType() == IMAGE) {
                 imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
 
                 if (arg2.equals("getRed")) {

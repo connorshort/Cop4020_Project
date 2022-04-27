@@ -34,8 +34,8 @@ import edu.ufl.cise.plc.ast.UnaryExpr;
 import edu.ufl.cise.plc.ast.UnaryExprPostfix;
 import edu.ufl.cise.plc.ast.VarDeclaration;
 import edu.ufl.cise.plc.ast.WriteStatement;
-
 import edu.ufl.cise.plc.runtime.ConsoleIO;
+//import jdk.incubator.foreign.FunctionDescriptor;
 
 
 import static edu.ufl.cise.plc.ast.Types.Type.*;
@@ -863,12 +863,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
         }
 
-        /*else {
-            imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
-            arg += "FileURLIO.writeImage(";
-            arg = arg + writeStatement.getSource().getText() + ", " + writeStatement.getDest().getText() + ");" + "\n";
-        }*/
-
 
         else {
             imports += "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
@@ -1029,6 +1023,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
         System.out.println("visitPixelSelector");
 
+
         return arg;
     }
 
@@ -1036,7 +1031,16 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
         System.out.println("visitUnaryExprPostfix");
-
+        imports += "import java.awt.image.BufferedImage;\n";
+        Object arg2 = "";
+        arg2 += "ColorTuple.unpack(";
+        arg2 += unaryExprPostfix.getExpr().getText();
+        arg2 += ".getRGB(";
+        arg2 += unaryExprPostfix.getSelector().getX().getText();
+        arg2 += ", ";
+        arg2 += unaryExprPostfix.getSelector().getY().getText();
+        arg2 += "))";
+        arg += (String)arg2;
         return arg;
     }
 

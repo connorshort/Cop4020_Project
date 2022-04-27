@@ -149,6 +149,13 @@ public class CodeGenVisitor implements ASTVisitor {
             arg += ".pack()";
             return arg;
         }
+
+        else if (identExpr.getCoerceTo() == COLOR && identExpr.getType() == INT) {
+            arg += "new ColorTuple(";
+            arg += identExpr.getText();
+            arg += ")";
+            return arg;
+        }
         arg += (identExpr.getText());
         //arg += ")";
 

@@ -323,7 +323,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 return arg;
             }
 
-            else if (declaration.getOp().getKind() == Kind.LARROW && declaration.getExpr().getText().equals(file)) {
+            else if (declaration.getOp().getKind() == Kind.LARROW && declaration.getExpr().getType() == STRING && declaration.getNameDef().getType() != IMAGE) {
+                Imports.add("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
                 arg2 += " = ";
                 Type type = declaration.getNameDef().getType();
 
@@ -350,20 +351,9 @@ public class CodeGenVisitor implements ASTVisitor {
                     arg2 += "(boolean)";
                 }
 
-                if (file.length() >= 5) {
-                    if (file.substring(0, 5).equals("\"http")) {
-                        arg2 += "FileURLIO.readImage(";
-                        arg2 += file;
-                        arg += (String)arg2;
-                        arg += ");\n";
-                        return arg;
-                    }
-                }
-
-
                 arg2 += "FileURLIO.readValueFromFile(";
 
-                arg2 += file;
+                arg2 += declaration.getExpr().getText();
                 arg += (String)arg2;
                 arg += ");\n";
                 return arg;
@@ -711,14 +701,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
         arg = arg + "(" + Type + ")";
         if (consoleExpr.getType() == STRING) {
-            if (file.length() >= 5) {
-                if (file.substring(0, 5).equals("\"http")) {
-                    arg += "FileURLIO.readImage(";
-                    arg += file;
-                    arg += ");\n";
-                    return arg;
-                }
-            }
+
 
             arg += "FileURLIO.readValueFromFile(";
 
@@ -845,28 +828,17 @@ public class CodeGenVisitor implements ASTVisitor {
 
             if (readStatement.getTargetDec().getType() == IMAGE) {
                 if (readStatement.getTargetDec().getDim() != null) {
-                    if (file.length() >= 5) {
-                        if (file.substring(0, 5).equals("\"http") || file.substring(file.length() - 6,file.length() - 1).equals(".jpeg")) {
-                            Imports.add("import edu.ufl.cise.plc.runtime.ImageOps;\n");
-                            arg += "ImageOps.resize(";
-                            arg += "FileURLIO.readImage(";
-                            arg = arg + file + ")";
-                            arg += ", ";
-                            arg = readStatement.getTargetDec().getDim().visit(this, arg);
-                            arg += ");\n";
-                            return arg;
-                        }
-                    }
 
-                }
+                    Imports.add("import edu.ufl.cise.plc.runtime.ImageOps;\n");
+                    arg += "ImageOps.resize(";
+                    arg += "FileURLIO.readImage(";
+                    arg = arg + file + ")";
+                    arg += ", ";
+                    arg = readStatement.getTargetDec().getDim().visit(this, arg);
+                    arg += ");\n";
+                    return arg;
 
-                if (file.length() >= 5) {
-                    if (file.substring(0, 5).equals("\"http")) {
-                        arg += "FileURLIO.readImage(";
-                        arg += file;
-                        arg += ");\n";
-                        return arg;
-                    }
+
                 }
 
 
@@ -913,6 +885,7 @@ public class CodeGenVisitor implements ASTVisitor {
     //Assignment 6
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
+        file = writeStatement.getDest().getText();
 
         if (writeStatement.getDest().getType() == STRING && writeStatement.getSource().getType() != IMAGE) {
             Imports.add("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
@@ -920,7 +893,6 @@ public class CodeGenVisitor implements ASTVisitor {
             Expr source = writeStatement.getSource();
             arg = source.visit(this, arg);
             arg = arg + ", " + "" + writeStatement.getDest().getText() + "" + ");" + "\n";
-            file = writeStatement.getDest().getText();
 
         }
         else if (writeStatement.getSource().getType() == IMAGE && writeStatement.getDest().getType() == CONSOLE) {
@@ -931,6 +903,16 @@ public class CodeGenVisitor implements ASTVisitor {
             arg = arg + ");" + "\n";
 
 
+        }
+
+        else if (writeStatement.getSource().getType() == IMAGE && writeStatement.getDest().getType() == STRING) {
+            Imports.add("import edu.ufl.cise.plc.runtime.FileURLIO;\n");
+            arg += "FileURLIO.writeImage(";
+            arg += writeStatement.getSource().getText();
+            arg += ", ";
+            arg += file;
+            arg += ");\n";
+            return arg;
         }
 
 

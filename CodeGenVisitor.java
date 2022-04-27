@@ -295,6 +295,8 @@ public class CodeGenVisitor implements ASTVisitor {
 
         String Type = "";
 
+
+
         if (nameDef.getType() == IMAGE) {
             imports += "import java.awt.image.BufferedImage;\n";
 
@@ -302,9 +304,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
                 imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
                 if (nameDef.getDim() != null) {
-
                     arg2 += "= FileURLIO.readImage(";
-
 
                     arg2 = declaration.getExpr().visit(this, arg2);
                     arg2 += ", ";
@@ -316,10 +316,11 @@ public class CodeGenVisitor implements ASTVisitor {
                     return arg;
                 }
                 else {
-
-                    arg2 += "FileURLIO.readImage(";
+                    arg2 += "= FileURLIO.readImage(";
+                    //arg2 += " = ImageOps.";
                     arg2 = declaration.getExpr().visit(this, arg2);
                     arg2 += ");\n";
+
                     arg += (String)arg2;
                     return arg;
                 }
@@ -657,17 +658,17 @@ public class CodeGenVisitor implements ASTVisitor {
                 imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
 
                 if (arg2.equals("getRed")) {
-                    arg2 = "(extractRed(";
+                    arg2 = "ImageOps.extractRed(";
                 }
                 else if (arg2.equals("getGreen")) {
-                    arg2 = "(extractGreen(";
+                    arg2 = "ImageOps.extractGreen(";
                 }
                 else if (arg2.equals("getBlue")) {
-                    arg2 = "(extractBlue(";
+                    arg2 = "ImageOps.extractBlue(";
                 }
 
                 arg2 = expr.visit(this, arg2);
-                arg2 += "))";
+                arg2 += ")";
                 arg += (String)arg2;
                 return arg;
 

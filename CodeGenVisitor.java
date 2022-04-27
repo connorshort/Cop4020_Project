@@ -157,7 +157,6 @@ public class CodeGenVisitor implements ASTVisitor {
             return arg;
         }
         arg += (identExpr.getText());
-        //arg += ")";
 
         return arg;
     }
@@ -551,7 +550,37 @@ public class CodeGenVisitor implements ASTVisitor {
             else if (leftType == IMAGE && rightType == INT || leftType == INT && rightType == IMAGE) {
                 System.out.println("3");
 
-                arg2 += "ImageOps.binaryImageScalarOp(";
+                arg2 += "(ImageOps.binaryImageScalarOp(ImageOps.OP.valueOf(";
+                if (op == Kind.DIV) {
+                    arg2 += "\"DIV\"),";
+                }
+                else if (op == Kind.MINUS) {
+                    arg2 += "\"MINUS\"), ";
+                }
+                else if (op == Kind.PLUS) {
+                    arg2 += "\"PLUS\"), ";
+                }
+                else if (op == Kind.TIMES) {
+                    arg2 += "\"TIMES\"), ";
+                }
+                else if (op == Kind.MOD) {
+                    arg2 += "\"MOD\"), ";
+                }
+
+                arg2 = leftExpr.visit(this, arg2);
+                arg2 += ", ";
+
+                if (binaryExpr.getLeft().getType() == COLOR && binaryExpr.getRight().getType() == INT) {
+                    arg2 += "new ColorTuple(";
+                    arg2 = binaryExpr.getRight().visit(this, arg2);
+                    arg2 += ")))";
+                    arg += (String)arg2;
+                    return arg;
+                }
+                arg2 = rightExpr.visit(this, arg2);
+                arg2 += "))";
+
+                /*arg2 += "ImageOps.binaryImageScalarOp(";
                 if (op == Kind.DIV) {
                     arg2 += "DIV,";
                 }
@@ -571,7 +600,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg2 += ")";
 
                 arg += (String)arg2;
-                return arg;
+                return arg;*/
 
             }
         }

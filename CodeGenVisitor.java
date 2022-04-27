@@ -303,6 +303,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg += ";\n";
                 return arg;
             }
+
         }
 
 
@@ -764,19 +765,21 @@ public class CodeGenVisitor implements ASTVisitor {
 
         }
         else if (writeStatement.getSource().getType() == IMAGE && writeStatement.getDest().getType() == CONSOLE) {
-            if (writeStatement.getDest().getType() == CONSOLE) {
-                imports += "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
-                arg += "ConsoleIO.displayImageOnScreen(";
-                arg += writeStatement.getSource().getText();
-                arg = arg + ");" + "\n";
-            }
-            else {
-                imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
-                arg += "FileURLIO.writeImage(";
-                arg = arg + writeStatement.getSource().getText() + ", " + writeStatement.getDest().getText() + ");" + "\n";
-            }
+
+            System.out.println("Here");
+            imports += "import edu.ufl.cise.plc.runtime.ConsoleIO;\n";
+            arg += "ConsoleIO.displayImageOnScreen(";
+            arg += writeStatement.getSource().getText();
+            arg = arg + ");" + "\n";
+
+
         }
 
+        /*else {
+            imports += "import edu.ufl.cise.plc.runtime.FileURLIO;\n";
+            arg += "FileURLIO.writeImage(";
+            arg = arg + writeStatement.getSource().getText() + ", " + writeStatement.getDest().getText() + ");" + "\n";
+        }*/
 
 
         else {

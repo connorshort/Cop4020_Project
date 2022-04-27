@@ -365,9 +365,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
                     arg2 = declaration.getExpr().visit(this, arg2);
                     arg2 += ", ";
-                    arg2 += nameDef.getDim().getWidth().getText();
-                    arg2 += ", ";
-                    arg2 += nameDef.getDim().getHeight().getText();
+                    arg2 = declaration.getDim().visit(this, arg2);
                     arg2 += ");\n";
                     arg += (String)arg2;
                     return arg;
@@ -387,9 +385,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
                 if (nameDef.getDim() != null) {
                     arg2 += " = new BufferedImage(";
-                    arg2 += declaration.getDim().getWidth().getText();
-                    arg2 += ", ";
-                    arg2 += declaration.getDim().getHeight().getText();
+                    arg2 = declaration.getDim().visit(this, arg2);
                     arg2 += ", BufferedImage.TYPE_INT_RGB);\n";
                     arg += (String)arg2;
                     return arg;
@@ -893,9 +889,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 arg2 += "ImageOps.resize(";
                 arg2 += expr.getText();
                 arg2 += ", ";
-                arg2 += assignmentStatement.getTargetDec().getDim().getWidth().getText();
-                arg2 += ", ";
-                arg2 += assignmentStatement.getTargetDec().getDim().getHeight().getText();
+                arg2 = assignmentStatement.getTargetDec().getDim().visit(this, arg2);
                 arg2 += ");\n";
                 arg += (String) arg2;
                 return arg;
@@ -1015,7 +1009,12 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
         System.out.println("visitDimension");
-        return null;
+        Object arg2 = "";
+        arg2 = dimension.getWidth().visit(this, arg2);
+        arg2 += ", ";
+        arg2 = dimension.getHeight().visit(this, arg2);
+        arg += (String)arg2;
+        return arg;
     }
 
     //Assignment 6

@@ -309,6 +309,19 @@ public class CodeGenVisitor implements ASTVisitor {
 
         if (declaration.getOp() != null) {
             if (declaration.getOp().getKind() == Kind.ASSIGN) {
+                if (declaration.getNameDef().getType() == IMAGE && declaration.getExpr().getType() == IMAGE) {
+                    if (declaration.getDim() != null) {
+                        imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
+                        arg2 += " = ImageOps.resize(";
+                        arg2 = declaration.getExpr().visit(this, arg2);
+                        arg2 += ", ";
+                        arg2 = declaration.getDim().visit(this, arg2);
+                        arg2 += ");";
+                        arg += (String)arg2;
+                        return arg;
+
+                    }
+                }
                 arg2 += " = ";
                 arg2 = declaration.getExpr().visit(this, arg2);
                 arg += (String)arg2;
@@ -760,13 +773,22 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
 
                 arg2 = expr.visit(this, arg2);
-                arg2 += ");";
+                arg2 += ")";
                 arg += (String)arg2;
                 return arg;
 
             }
 
 
+        }
+
+        else if (unaryExpression.getOp().getKind() == Kind.IMAGE_OP) {
+            arg2 = unaryExpression.getExpr().getText();
+            arg2 += ".";
+            arg2 += unaryExpression.getOp().getText();
+            arg2 += "()";
+            arg += (String)arg2;
+            return arg;
         }
 
         arg2 = expr.visit(this, arg2);

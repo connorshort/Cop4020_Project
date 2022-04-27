@@ -144,6 +144,11 @@ public class CodeGenVisitor implements ASTVisitor {
             imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
             arg += "ImageOps.clone(";
         }
+        else if (identExpr.getCoerceTo() == INT && identExpr.getType() == COLOR) {
+            arg += (identExpr.getText());
+            arg += ".pack()";
+            return arg;
+        }
         arg += (identExpr.getText());
         //arg += ")";
 
@@ -656,16 +661,25 @@ public class CodeGenVisitor implements ASTVisitor {
         if (op.getKind() == Kind.COLOR_OP) {
             if ((expr.getType() == INT || expr.getType() == COLOR) && expr.getCoerceTo() != COLOR) {
 
+                if (arg2.equals("getRed")) {
+                    arg2 = "ColorTuple.getRed(";
+                }
+                else if (arg2.equals("getGreen")) {
+                    arg2 = "ColorTuple.getGreen(";
+                }
+                else if (arg2.equals("getBlue")) {
+                    arg2 = "ColorTuple.getBlue(";
+                }
+
                 arg2 = "(" + arg2;
                 arg2 += "(";
                 arg2 = expr.visit(this, arg2);
-                arg2 += "))";
+                arg2 += ")))";
                 arg += (String)arg2;
                 return arg;
             }
 
             else if (expr.getType() == IMAGE || expr.getCoerceTo() == COLOR) {
-
                 imports += "import edu.ufl.cise.plc.runtime.ImageOps;\n";
 
                 if (arg2.equals("getRed")) {
@@ -684,6 +698,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 return arg;
 
             }
+
+
         }
 
         arg2 = expr.visit(this, arg2);
@@ -914,6 +930,7 @@ public class CodeGenVisitor implements ASTVisitor {
         Expr red = colorExpr.getRed();
         Expr green = colorExpr.getGreen();
         Expr blue = colorExpr.getBlue();
+
 
         arg += "new ColorTuple(";
         arg = red.visit(this, arg);
